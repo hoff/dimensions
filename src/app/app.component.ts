@@ -40,6 +40,7 @@ export class AppComponent implements OnInit {
 
   mesh: Mesh
   lookY = 0
+  ballNotes = []
 
   // DATA
   countries: Country[] = [
@@ -60,6 +61,24 @@ export class AppComponent implements OnInit {
     }
   ]
 
+  makeNotes() {
+    let offset = -1200
+    for (let i = 38; i <= 84; i++) {
+      const ball = this.makeBall(10)
+      const mat: any = ball.material
+      mat.color.setHex(this.randomColorHex())
+      mat.color.setHSL(0,50,50)
+
+      //ball.position.setY(i * 100)
+      ball.position.setX(offset)
+      offset += 50
+      ball.visible = false
+      this.scene.add(ball)
+      this.ballNotes.push(ball)
+      console.log(ball)
+    }
+  }
+
   ngOnInit() {
 
     this.scene = new Scene()
@@ -67,31 +86,41 @@ export class AppComponent implements OnInit {
     this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
     this.camera.position.z = 1000
 
+    // sample cube
     const geometry = new BoxGeometry(200, 200, 200)
     const material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 
     this.mesh = new Mesh(geometry, material)
-    this.scene.add(this.mesh)
-    console.log(this.mesh.material)
-
-
+    //this.scene.add(this.mesh)
 
     for (const country of this.countries) {
       // ball
-      const ballGeo = new SphereGeometry(country.population, 100, 100)
+      const ballGeo = new SphereGeometry(country.population, 10, 10)
       const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
       const ballMesh = new Mesh(ballGeo, ballMat)
       //ballMesh.position.setY(country.population)
-      this.scene.add(ballMesh)
+      //this.scene.add(ballMesh)
     }
+
+    this.makeNotes()
 
 
     this.renderer = new WebGLRenderer()
     this.renderer.setSize(window.innerWidth, window.innerHeight)
-
     this.sceneContainer.nativeElement.appendChild(this.renderer.domElement)
 
+    // kick off animation
     this.animate()
+
+    // init midi
+    const nav: any = navigator
+    if (nav.requestMIDIAccess) {
+      nav.requestMIDIAccess({
+        sysex: false
+      }).then(this.onMIDISuccess, this.onMIDIFailure);
+    } else {
+      alert('no midi support, sorry');
+    }
   }
 
   animate = () => {
@@ -123,7 +152,8 @@ export class AppComponent implements OnInit {
     return Math.random().toString(10).slice(2, 8)
   }
 
-  onMIDISuccess(midiAccess) {
+  onMIDISuccess = (midiAccess) => {
+    console.log('on midi succesful')
     // when we get a succesful response, run this code
     const midi = midiAccess // this is our raw MIDI data, inputs, outputs, and sysex status
 
@@ -135,19 +165,40 @@ export class AppComponent implements OnInit {
     }
   }
 
-  onMIDIFailure(error) {
+  onMIDIFailure = (error) => {
     // when we get a failed response, run this code
-    console.log("No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim " + error);
+    console.log('No access to MIDI devices or your browser does not support WebMIDI API.')
   }
-  onMIDIMessage(message) {
-    const data = message.data; // this gives us our [command/channel, note, velocity] data.
-    console.log('MIDI data', data); // MIDI data [144, 63, 73]
+  onMIDIMessage = (message) => {
+
+    // highlight note
+    const [type, key, pressure] = message.data
+    const ball: Mesh = this.ballNotes[key - 36]
+    if (type === 144) {
+      // down
+      ball.visible = true
+      ball.scale.set(pressure, pressure, pressure)
+    } else if (type === 128) {
+      // up
+      ball.visible = false
+    }
+
+    // radom color test
+    const mat: any = this.mesh.material
+    const rand = this.randomColorHex()
+    mat.color.setHex(rand)
   }
 
   /**
    * The problem was that you gave an 16 base string, instead of a random, 6 digit number.
    */
 
+   makeBall = (size?: number ) => {
+      const ballGeo  = new SphereGeometry(size, 10, 10)
+      const ballMat  = new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+      const ballMesh = new Mesh(ballGeo, ballMat)
+      return ballMesh
+   }
 
 
 }
