@@ -12,6 +12,9 @@ import {
   SphereGeometry,
   MeshBasicMaterial,
 
+  // color
+  Color,
+
   // universals
   Mesh,
   WebGLRenderer,
@@ -42,6 +45,8 @@ export class AppComponent implements OnInit {
   lookY = 0
   ballNotes = []
 
+  scaleFactor = 1
+
   // DATA
   countries: Country[] = [
     {
@@ -66,8 +71,12 @@ export class AppComponent implements OnInit {
     for (let i = 38; i <= 84; i++) {
       const ball = this.makeBall(10)
       const mat: any = ball.material
-      mat.color.setHex(this.randomColorHex())
-      mat.color.setHSL(0,50,50)
+      let c: Color = mat.color
+
+      const zIndex = i - 38
+      const huePC = (zIndex % 12) / 12
+      c.setHSL(huePC, 0.7, 0.8)
+      ball.userData.hue = huePC
 
       //ball.position.setY(i * 100)
       ball.position.setX(offset)
@@ -129,6 +138,18 @@ export class AppComponent implements OnInit {
     this.mesh.rotation.y += 0.02
     //this.camera.lookAt(new Vector3(0, 0, 0))
 
+    // reduce size on each loop
+    for (const note of this.ballNotes) {
+      const n: Mesh = note
+      
+      if (n.visible) {
+        const scale = n.scale.x
+        const newScale = scale <= 0 ? 0 : scale - 0.1
+        n.scale.set(newScale, newScale, newScale)
+        this.darkenBall(n)
+      }
+    }
+
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -146,6 +167,9 @@ export class AppComponent implements OnInit {
     this.camera.lookAt(new Vector3(0, this.lookY, 0))
 
     this.renderer.render(this.scene, this.camera)
+
+    // test
+    this.darkenBall(this.ballNotes[10])
   }
 
   randomColorHex() {
@@ -171,16 +195,24 @@ export class AppComponent implements OnInit {
   }
   onMIDIMessage = (message) => {
 
+    console.log(message.data)
+
     // highlight note
     const [type, key, pressure] = message.data
     const ball: Mesh = this.ballNotes[key - 36]
     if (type === 144) {
       // down
       ball.visible = true
-      ball.scale.set(pressure, pressure, pressure)
+      // reset ball color
+      this.lightBall(ball)
+      // scale the ball up, per pressure
+      const newScale = pressure * this.scaleFactor
+      ball.scale.set(newScale, newScale, newScale)
     } else if (type === 128) {
       // up
-      ball.visible = false
+      //ball.visible = false
+    } else if (type === 176 && key === 7) {
+      this.scaleFactor = (pressure - 64) / 64
     }
 
     // radom color test
@@ -193,12 +225,31 @@ export class AppComponent implements OnInit {
    * The problem was that you gave an 16 base string, instead of a random, 6 digit number.
    */
 
-   makeBall = (size?: number ) => {
-      const ballGeo  = new SphereGeometry(size, 10, 10)
-      const ballMat  = new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-      const ballMesh = new Mesh(ballGeo, ballMat)
-      return ballMesh
-   }
+  makeBall = (size?: number) => {
+    const ballGeo = new SphereGeometry(size, 10, 10)
+    const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+    const ballMesh = new Mesh(ballGeo, ballMat)
+    return ballMesh
+  }
+
+  darkenBall(ball: any) {
+    const mat: MeshBasicMaterial = ball.material
+    const color: Color = mat.color
+    const hsl = color.getHSL()
+    const h = hsl.h
+    const s = hsl.s
+    const l = hsl.l - 0.005 // fadeout speed, make variable
+    color.setHSL(h, s, l)
+  }
+  lightBall(ball: any) {
+    const mat: MeshBasicMaterial = ball.material
+    const color: Color = mat.color
+    const hsl = color.getHSL()
+    const h = ball.userData.hue // hsl.h
+    const s = 0.7 // hsl.s
+    const l = 0.8 // make constatn, back up
+    color.setHSL(h, s, l)
+  }
 
 
 }
