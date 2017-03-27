@@ -7,10 +7,13 @@ import {
   PerspectiveCamera,
   OrbitControls,
 
-  // material
+  // geometries
   BoxGeometry,
   SphereGeometry,
+
+  // materials
   MeshBasicMaterial,
+  MeshPhongMaterial,
 
   // color
   Color,
@@ -230,13 +233,13 @@ export class AppComponent implements OnInit {
 
   makeBall = (size?: number) => {
     const ballGeo = new SphereGeometry(size, 10, 10)
-    const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+    const ballMat = new MeshPhongMaterial({ color: 0xff0000, wireframe: true })
     const ballMesh = new Mesh(ballGeo, ballMat)
     return ballMesh
   }
 
   darkenBall(ball: any) {
-    const mat: MeshBasicMaterial = ball.material
+    const mat: MeshPhongMaterial = ball.material
     const color: Color = mat.color
     const hsl = color.getHSL()
     const h = hsl.h
@@ -252,7 +255,7 @@ export class AppComponent implements OnInit {
   }
   lightBall(ball: any) {
     ball.visible = true
-    const mat: MeshBasicMaterial = ball.material
+    const mat: MeshPhongMaterial = ball.material
     const color: Color = mat.color
     const hsl = color.getHSL()
     const h = ball.userData.hue // hsl.h
