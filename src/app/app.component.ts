@@ -45,6 +45,8 @@ export class AppComponent implements OnInit {
   lookY = 0
   ballNotes = []
 
+  ballLightness = 0.5
+
   scaleFactor = 1
 
   // DATA
@@ -75,7 +77,7 @@ export class AppComponent implements OnInit {
 
       const zIndex = i - 38
       const huePC = (zIndex % 12) / 12
-      c.setHSL(huePC, 0.7, 0.8)
+      c.setHSL(huePC, 0.7, this.ballLightness)
       ball.userData.hue = huePC
 
       //ball.position.setY(i * 100)
@@ -91,6 +93,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
 
     this.scene = new Scene()
+    this.scene.background = new Color( 0xffffff )
 
     this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
     this.camera.position.z = 1000
@@ -237,17 +240,24 @@ export class AppComponent implements OnInit {
     const color: Color = mat.color
     const hsl = color.getHSL()
     const h = hsl.h
-    const s = hsl.s
-    const l = hsl.l - 0.005 // fadeout speed, make variable
-    color.setHSL(h, s, l)
+    const s = hsl.s - 0.0035
+    //const l = hsl.l - 0.005 // fadeout speed, make variable
+    // lighten test
+    const l = hsl.l + 0.0035
+    console.log(l)
+    if (l > 1 ) {
+      ball.visible = false
+    }
+    color.setHSL(h, s, l < 1? l: 1)
   }
   lightBall(ball: any) {
+    ball.visible = true
     const mat: MeshBasicMaterial = ball.material
     const color: Color = mat.color
     const hsl = color.getHSL()
     const h = ball.userData.hue // hsl.h
     const s = 0.7 // hsl.s
-    const l = 0.8 // make constatn, back up
+    const l = this.ballLightness
     color.setHSL(h, s, l)
   }
 
