@@ -5,11 +5,16 @@ import {
 
   // camear
   PerspectiveCamera,
+  OrthographicCamera,
   OrbitControls,
 
   // geometries
   BoxGeometry,
   SphereGeometry,
+
+  // Light
+  AmbientLight,
+  DirectionalLight,
 
   // materials
   MeshBasicMaterial,
@@ -89,7 +94,6 @@ export class AppComponent implements OnInit {
       ball.visible = false
       this.scene.add(ball)
       this.ballNotes.push(ball)
-      console.log(ball)
     }
   }
 
@@ -99,14 +103,23 @@ export class AppComponent implements OnInit {
     this.scene.background = new Color( 0xffffff )
 
     this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
+    //this.camera = new OrthographicCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
     this.camera.position.z = 1000
+
+    // lights
+    const ambient = new AmbientLight(this.randomColorHex())
+    const directional = new DirectionalLight(this.randomColorHex(), 0.5)
 
     // sample cube
     const geometry = new BoxGeometry(200, 200, 200)
-    const material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-
+    let material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+    material = <any>new MeshPhongMaterial({ color: 0xff0000, wireframe: false })
     this.mesh = new Mesh(geometry, material)
-    //this.scene.add(this.mesh)
+    // this.scene.add(this.mesh)
+    
+    // add lights
+    this.scene.add(ambient)
+    this.scene.add(directional)
 
     for (const country of this.countries) {
       // ball
@@ -134,7 +147,7 @@ export class AppComponent implements OnInit {
         sysex: false
       }).then(this.onMIDISuccess, this.onMIDIFailure);
     } else {
-      alert('no midi support, sorry');
+      alert('no midi support, sorry')
     }
   }
 
@@ -147,7 +160,6 @@ export class AppComponent implements OnInit {
     // reduce size on each loop
     for (const note of this.ballNotes) {
       const n: Mesh = note
-      
       if (n.visible) {
         const scale = n.scale.x
         const newScale = scale <= 0 ? 0 : scale - 0.1
@@ -155,27 +167,11 @@ export class AppComponent implements OnInit {
         this.darkenBall(n)
       }
     }
-
     this.renderer.render(this.scene, this.camera)
   }
 
   onClick = () => {
-    const mat: any = this.mesh.material
-    const rand = this.randomColorHex()
-    mat.color.setHex(rand)
-
-    // running and working
-    console.log(mat, rand)
-
-    // change camera
-    this.lookY = this.lookY - 20
-    console.log(this.lookY)
-    this.camera.lookAt(new Vector3(0, this.lookY, 0))
-
-    this.renderer.render(this.scene, this.camera)
-
-    // test
-    this.darkenBall(this.ballNotes[10])
+    // nothing
   }
 
   randomColorHex() {
@@ -201,7 +197,7 @@ export class AppComponent implements OnInit {
   }
   onMIDIMessage = (message) => {
 
-    console.log(message.data)
+    //console.log(message.data)
 
     // highlight note
     const [type, key, pressure] = message.data
@@ -215,16 +211,11 @@ export class AppComponent implements OnInit {
       const newScale = pressure * this.scaleFactor
       ball.scale.set(newScale, newScale, newScale)
     } else if (type === 128) {
-      // up
-      //ball.visible = false
+      // up (nothinh currently)
+      // ball.visible = false
     } else if (type === 176 && key === 7) {
       this.scaleFactor = (pressure - 64) / 64
     }
-
-    // radom color test
-    const mat: any = this.mesh.material
-    const rand = this.randomColorHex()
-    mat.color.setHex(rand)
   }
 
   /**
@@ -233,7 +224,7 @@ export class AppComponent implements OnInit {
 
   makeBall = (size?: number) => {
     const ballGeo = new SphereGeometry(size, 10, 10)
-    const ballMat = new MeshPhongMaterial({ color: 0xff0000, wireframe: true })
+    const ballMat = new MeshPhongMaterial({ color: 0xff0000, wireframe: false, opacity: 0.3, transparent: true,  })
     const ballMesh = new Mesh(ballGeo, ballMat)
     return ballMesh
   }
@@ -244,14 +235,13 @@ export class AppComponent implements OnInit {
     const hsl = color.getHSL()
     const h = hsl.h
     const s = hsl.s - 0.0035
-    //const l = hsl.l - 0.005 // fadeout speed, make variable
     // lighten test
-    const l = hsl.l + 0.0035
-    console.log(l)
+    const l = hsl.l + 0.0035 // fadeout speed, make variable
     if (l > 1 ) {
       ball.visible = false
     }
     color.setHSL(h, s, l < 1? l: 1)
+    ball.material.needsUpdate = true
   }
   lightBall(ball: any) {
     ball.visible = true
@@ -262,6 +252,8 @@ export class AppComponent implements OnInit {
     const s = 0.7 // hsl.s
     const l = this.ballLightness
     color.setHSL(h, s, l)
+    ball.material.needsUpdate = true
+    console.log(ball)
   }
 
 
