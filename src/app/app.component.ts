@@ -18,7 +18,7 @@ import {
 
   // materials
   MeshBasicMaterial,
-  MeshPhongMaterial,
+  //MeshBasicMaterial,
 
   // color
   Color,
@@ -108,12 +108,12 @@ export class AppComponent implements OnInit {
 
     // lights
     const ambient = new AmbientLight(this.randomColorHex())
-    const directional = new DirectionalLight(this.randomColorHex(), 0.5)
+    const directional = new DirectionalLight(this.randomColorHex(), 0.1)
 
     // sample cube
     const geometry = new BoxGeometry(200, 200, 200)
     let material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-    material = <any>new MeshPhongMaterial({ color: 0xff0000, wireframe: false })
+    material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: false })
     this.mesh = new Mesh(geometry, material)
     // this.scene.add(this.mesh)
     
@@ -224,13 +224,13 @@ export class AppComponent implements OnInit {
 
   makeBall = (size?: number) => {
     const ballGeo = new SphereGeometry(size, 10, 10)
-    const ballMat = new MeshPhongMaterial({ color: 0xff0000, wireframe: false, opacity: 0.3, transparent: true,  })
+    const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true, opacity: 0.3, transparent: true,  })
     const ballMesh = new Mesh(ballGeo, ballMat)
     return ballMesh
   }
 
   darkenBall(ball: any) {
-    const mat: MeshPhongMaterial = ball.material
+    const mat: MeshBasicMaterial = ball.material
     const color: Color = mat.color
     const hsl = color.getHSL()
     const h = hsl.h
@@ -241,11 +241,12 @@ export class AppComponent implements OnInit {
       ball.visible = false
     }
     color.setHSL(h, s, l < 1? l: 1)
+    //mat.opacity = 
     ball.material.needsUpdate = true
   }
   lightBall(ball: any) {
     ball.visible = true
-    const mat: MeshPhongMaterial = ball.material
+    const mat: MeshBasicMaterial = ball.material
     const color: Color = mat.color
     const hsl = color.getHSL()
     const h = ball.userData.hue // hsl.h
