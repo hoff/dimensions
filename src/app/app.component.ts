@@ -30,6 +30,8 @@ import {
 
 } from 'three'
 
+import { MIDIService } from './midi.service'
+
 interface Country {
   name: string,
   gdp: number,
@@ -43,7 +45,11 @@ interface Country {
 })
 export class AppComponent implements OnInit {
 
+
+
   @ViewChild('scene') sceneContainer: ElementRef
+
+
 
   scene: Scene
   camera: PerspectiveCamera
@@ -76,6 +82,8 @@ export class AppComponent implements OnInit {
     }
   ]
 
+  constructor(private midi: MIDIService) { }
+
   makeNotes() {
     let offset = -1200
     for (let i = 38; i <= 84; i++) {
@@ -99,8 +107,12 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
 
+    this.midi.knob1.subscribe(value => {
+      console.log('knob 1 is now at', value)
+    })
+
     this.scene = new Scene()
-    this.scene.background = new Color( 0xffffff )
+    this.scene.background = new Color(0xffffff)
 
     this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
     //this.camera = new OrthographicCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
@@ -116,7 +128,7 @@ export class AppComponent implements OnInit {
     material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: false })
     this.mesh = new Mesh(geometry, material)
     // this.scene.add(this.mesh)
-    
+
     // add lights
     this.scene.add(ambient)
     this.scene.add(directional)
@@ -140,14 +152,13 @@ export class AppComponent implements OnInit {
     // kick off animation
     this.animate()
 
-    // init midi
-    const nav: any = navigator
-    if (nav.requestMIDIAccess) {
-      nav.requestMIDIAccess({
-        sysex: false
-      }).then(this.onMIDISuccess, this.onMIDIFailure);
+
+    if (this.midi.midiMessageObservable) {
+      this.midi.midiMessageObservable.subscribe(message => {
+        this.onMIDIMessage(message)
+      })
     } else {
-      alert('no midi support, sorry')
+      console.warn('message observable not ready', this.midi)
     }
   }
 
@@ -178,26 +189,10 @@ export class AppComponent implements OnInit {
     return Math.random().toString(10).slice(2, 8)
   }
 
-  onMIDISuccess = (midiAccess) => {
-    console.log('on midi succesful')
-    // when we get a succesful response, run this code
-    const midi = midiAccess // this is our raw MIDI data, inputs, outputs, and sysex status
 
-    const inputs = midi.inputs.values()
-    // loop over all available inputs and listen for any MIDI input
-    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
-      // each time there is a midi message call the onMIDIMessage function
-      input.value.onmidimessage = this.onMIDIMessage
-    }
-  }
-
-  onMIDIFailure = (error) => {
-    // when we get a failed response, run this code
-    console.log('No access to MIDI devices or your browser does not support WebMIDI API.')
-  }
   onMIDIMessage = (message) => {
 
-    //console.log(message.data)
+    console.log(message.data)
 
     // highlight note
     const [type, key, pressure] = message.data
@@ -224,7 +219,7 @@ export class AppComponent implements OnInit {
 
   makeBall = (size?: number) => {
     const ballGeo = new SphereGeometry(size, 10, 10)
-    const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true, opacity: 0.3, transparent: true,  })
+    const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true, opacity: 0.3, transparent: true, })
     const ballMesh = new Mesh(ballGeo, ballMat)
     return ballMesh
   }
@@ -237,10 +232,10 @@ export class AppComponent implements OnInit {
     const s = hsl.s - 0.0035
     // lighten test
     const l = hsl.l + 0.0035 // fadeout speed, make variable
-    if (l > 1 ) {
+    if (l > 1) {
       ball.visible = false
     }
-    color.setHSL(h, s, l < 1? l: 1)
+    color.setHSL(h, s, l < 1 ? l : 1)
     //mat.opacity = 
     ball.material.needsUpdate = true
   }
@@ -254,7 +249,7 @@ export class AppComponent implements OnInit {
     const l = this.ballLightness
     color.setHSL(h, s, l)
     ball.material.needsUpdate = true
-    console.log(ball)
+    //console.log(ball)
   }
 
 
