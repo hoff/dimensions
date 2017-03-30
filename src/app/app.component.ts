@@ -107,9 +107,28 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
 
-    this.midi.knob1.subscribe(value => {
+    // old
+    /*this.midi.knob1.subscribe(value => {
       console.log('knob 1 is now at', value)
+    })*/
+
+    this.midi.knobs.knob1.observable.subscribe(value => {
+      console.log('knob1 is now', value )
     })
+
+    this.midi.knobs.knob2.observable.subscribe(value => {
+      console.log('knob2 is now at ', value)
+    })
+
+    this.midi.knobs.knob3.observable.subscribe(value => {
+      console.log('knob3 is now at ', value)
+    })
+
+    this.midi.knobs.master.observable.subscribe(value => {
+      console.log('master is now at', value)
+    })
+
+    console.warn(this.midi.knobs)
 
     this.scene = new Scene()
     this.scene.background = new Color(0xffffff)

@@ -10,11 +10,57 @@ import 'rxjs/Rx'
 @Injectable()
 export class MIDIService {
 
+  /**
+   * Observable and Stream for ALL midi messages
+   */
   midiMessageStream: any
   midiMessageObservable: Subscribable<any>
 
-  knob1: Subscribable<any>
-  knob1stream: any
+  /**
+   * Knob data for creating know observables and streams
+   */
+  knobs: any = {}
+  knobSettings = [
+    {
+      name: 'master',
+      midiKey: 7,
+    },
+    /** TOP KNOBS */
+    {
+      name: 'knob1',
+      midiKey: 91,
+    },
+    {
+      name: 'knob2',
+      midiKey: 93,
+    },
+    {
+      name: 'knob3',
+      midiKey: 74,
+    },
+    {
+      name: 'knob4',
+      midiKey: 71,
+    },
+    {
+      name: 'knob5',
+      midiKey: 73,
+    },
+    {
+      name: 'knob6',
+      midiKey: 75,
+    },
+    {
+      name: 'knob7',
+      midiKey: 72,
+    },
+    {
+      name: 'knob8',
+      midiKey: 10,
+    }
+  ]
+  // mapping midi keys to knob names (dynamcally created from above)
+  knobMap = { }
 
   constructor() {
     const nav: any = navigator
@@ -31,10 +77,19 @@ export class MIDIService {
       this.midiMessageStream = stream
     }).share()
 
-    // set up knob1
-    this.knob1 = new Observable(stream => {
-      this.knob1stream = stream
-    }).share()
+
+  /**
+   * Create knob objects, which contain the knob's observable, and her stream
+   *
+   * Create a mapping, so when a midi key comes in, we can find the correponding stream to pass the value down to
+   */
+    for (const knob of this.knobSettings) {
+      const knobObservable = new Observable(knobStream => {
+        this.knobs[knob.name] = {observable: knobObservable, stream: knobStream}
+        this.knobMap[knob.midiKey] = knob.name
+      }).share()
+      knobObservable.subscribe()
+    }
   }
 
   onMIDISuccess = (midiAccess) => {
@@ -48,6 +103,8 @@ export class MIDIService {
     }
   }
 
+
+
   onMIDIFailure = (error) => {
     // when we get a failed response, run this code
     console.log('No access to MIDI devices or your browser does not support WebMIDI API.')
@@ -58,9 +115,12 @@ export class MIDIService {
     // the stream receives all midi messages
     this.midiMessageStream.next(message)
 
-    // knob1 stream
-    if (key === 91) {
-      this.knob1stream.next(value)
+
+    // key if there are any knobs with the incoming key, e.g. 93
+    if (this.knobMap[key]) {
+      console.log('got a mapping to key', key, this.knobMap[key])
+      const knobKey = this.knobMap[key]
+      this.knobs[knobKey].stream.next(value / 127)
     }
   }
 }
