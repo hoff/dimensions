@@ -1,8 +1,12 @@
 import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core'
 
-// move show to it's own file show.ts
+
 import { Show } from '../show'
 import { MIDIService } from '../midi.service'
+import { AnimationService } from '../animation.service'
+
+import { Observable } from 'rxjs/Observable'
+
 
 import {
   Scene,
@@ -52,6 +56,7 @@ export class ShowComponent extends Show implements OnInit {
 
   constructor(
     public midi: MIDIService,
+    public animation: AnimationService,
   ) {
     super()
   }
@@ -67,20 +72,21 @@ export class ShowComponent extends Show implements OnInit {
     const mesh = new Mesh(geometry, material)
     mesh.castShadow = true
     this.things.cube = mesh
-    this.scene.add(this.things.cube)
+    //this.scene.add(this.things.cube)
 
     // make paper
-    const paperGeo = new PlaneGeometry(600, 600)
-    const paperMaterial = new MeshPhongMaterial({color: 0xeeffcc })
+    const paperGeo = new PlaneGeometry(7, 7)
+    const paperMaterial = new MeshPhongMaterial({ color: 0xffffff })
     const paperMesh = new Mesh(paperGeo, paperMaterial)
     paperMesh.receiveShadow = true
     this.scene.add(paperMesh)
 
     // advanced cube
-    const cubeGeo = new BoxGeometry(400, 400, 400)
+    const cubeGeo = new BoxGeometry(1, 1, 1)
     const cubeMat = new MeshPhongMaterial({ color: 0xff0000 })
     const cubeMesh = new Mesh(cubeGeo, cubeMat)
-    cubeMesh.position.x = 300
+    cubeMesh.position.z = 0.5
+    cubeMesh.castShadow = true
     this.scene.add(cubeMesh)
 
     // subscribe to inputs
@@ -100,6 +106,20 @@ export class ShowComponent extends Show implements OnInit {
 
     // kick off animation loop
     this.animate()
+    this.animation.animateValue('easeInOutQuad', 1000, 0, 3, cubeMesh.position, 'x', () => {
+      console.log('animation done')
+    })
+    this.animation.animateValue('easeInOutQuad', 1000, 0, this.toRadians(360), cubeMesh.rotation, 'z', () => {
+      console.log('animation done')
+    })
+
+    // subscribe to keys
+    let sub = Observable.fromEvent(window, 'keypress').subscribe(event => {
+      this.animation.animateValue('bounce', 1000, 0, -3, cubeMesh.position, 'x', () => {
+        console.log('animation done')
+      })
+    })
+
   }
 
   animate = () => {
@@ -111,10 +131,17 @@ export class ShowComponent extends Show implements OnInit {
     cube.position.x = cube.position.x + this.xSpeed
 
     // update orbit
-    this.controls.update()
+    // this.controls.update()
 
     // render
     this.renderer.render(this.scene, this.camera)
   }
+
+  toRadians(angle) {
+    return angle * (Math.PI / 180);
+  }
+
+
+
 
 }

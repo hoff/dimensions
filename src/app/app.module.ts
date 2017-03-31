@@ -6,6 +6,7 @@ import { RouterModule, Routes } from '@angular/router'
 
 import { AppComponent } from './app.component'
 import { MIDIService } from './midi.service';
+import { AnimationService } from './animation.service'
 import { ColorPageComponent } from './color-page/color-page.component';
 import { ShowComponent } from './show/show.component';
 import { MapToIterablePipe } from './map-to-iterable.pipe'
@@ -32,6 +33,7 @@ const appRoutes: Routes = [
   ],
   providers: [
      MIDIService,
+     AnimationService,
   ],
   bootstrap: [AppComponent]
 })

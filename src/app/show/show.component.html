@@ -1,10 +1,15 @@
 <h1>demo show 1</h1>
-<div #sceneContainer style="width: 500px; height: 500px; border: 4px dotted pink;"></div>
+<div #sceneContainer style="width: 700px; height: 500px; margin: 0px auto;"></div>
 
 <h2>Things in this show</h2>
 <div *ngFor="let thing of things | mapToIterable">
   {{ thing.key }}, {{ thing.value }}
 </div>
+
+{{ jo }}
+
+spot light shadow intensity: {{ lights.spot.itensity }}
+<input *ngIf="lights.spot" type="range" (change)="lights.spot.intensity = $event.target.value" min="0" max="1.5" step="0.05" />
 
 <div *ngFor="let thing of scene.children">
   <span (click)="thing.visible = !thing.visible">{{thing.type }} visible? {{ thing.visible }}</span>
