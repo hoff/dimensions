@@ -116,8 +116,8 @@ export class MIDIService {
     this.midiMessageStream.next(message)
 
 
-    // key if there are any knobs with the incoming key, e.g. 93
-    if (this.knobMap[key]) {
+    // write to knob stream if incoming key (e.g. 93) maps
+    if (action === 176 && this.knobMap[key]) {
       console.log('got a mapping to key', key, this.knobMap[key])
       const knobKey = this.knobMap[key]
       this.knobs[knobKey].stream.next(value / 127)

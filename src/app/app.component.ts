@@ -107,22 +107,6 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
 
-    // old
-    /*this.midi.knob1.subscribe(value => {
-      console.log('knob 1 is now at', value)
-    })*/
-
-    this.midi.knobs.knob1.observable.subscribe(value => {
-      console.log('knob1 is now', value )
-    })
-
-    this.midi.knobs.knob2.observable.subscribe(value => {
-      console.log('knob2 is now at ', value)
-    })
-
-    this.midi.knobs.knob3.observable.subscribe(value => {
-      console.log('knob3 is now at ', value)
-    })
 
     this.midi.knobs.master.observable.subscribe(value => {
       console.log('master is now at', value)
@@ -172,13 +156,10 @@ export class AppComponent implements OnInit {
     this.animate()
 
 
-    if (this.midi.midiMessageObservable) {
-      this.midi.midiMessageObservable.subscribe(message => {
-        this.onMIDIMessage(message)
-      })
-    } else {
-      console.warn('message observable not ready', this.midi)
-    }
+    this.midi.midiMessageObservable.subscribe(message => {
+      this.onMIDIMessage(message)
+    })
+
   }
 
   animate = () => {

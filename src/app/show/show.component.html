@@ -1,0 +1,11 @@
+<h1>demo show 1</h1>
+<div #sceneContainer style="width: 500px; height: 500px; border: 4px dotted pink;"></div>
+
+<h2>Things in this show</h2>
+<div *ngFor="let thing of things | mapToIterable">
+  {{ thing.key }}, {{ thing.value }}
+</div>
+
+<div *ngFor="let thing of scene.children">
+  <span (click)="thing.visible = !thing.visible">{{thing.type }} visible? {{ thing.visible }}</span>
+</div>
