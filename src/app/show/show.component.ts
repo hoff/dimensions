@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core'
 
 // move show to it's own file show.ts
-import { Show } from '../color-page/color-page.component'
+import { Show } from '../show'
 import { MIDIService } from '../midi.service'
 
 import {
@@ -43,7 +43,7 @@ import {
 })
 export class ShowComponent extends Show implements OnInit {
 
-  @Input('show') show
+  @Input('show') show // not in use
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
 
@@ -54,7 +54,6 @@ export class ShowComponent extends Show implements OnInit {
     public midi: MIDIService,
   ) {
     super()
-    
   }
 
   ngOnInit() {
