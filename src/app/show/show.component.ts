@@ -7,6 +7,13 @@ import { AnimationService } from '../animation.service'
 
 import { Observable } from 'rxjs/Observable'
 
+import {
+    Engine,
+    Render,
+    World,
+    Bodies,
+} from 'matter-js'
+
 
 import {
   Scene,
@@ -15,7 +22,6 @@ import {
   // camear
   PerspectiveCamera,
   OrthographicCamera,
-  //OrbitControls,
 
   // geometries
   PlaneGeometry,
@@ -54,25 +60,37 @@ export class ShowComponent extends Show implements OnInit {
   things: any = {}
   xSpeed = 0
 
+  matterEngine: any
+  engine: Engine
+
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
   ) {
     super()
+    this.matterEngine = Engine
   }
 
   ngOnInit() {
+    // matter
+    this.engine = Engine.create()
+    let boxA = Bodies.rectangle(400, 200, 80, 80)
+    let boxB = Bodies.rectangle(450, 50, 80, 80)
+    let ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true })
+    World.add(this.engine.world, [boxA, boxB, ground])
+    Engine.run(this.engine)
+
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
 
     this.sceneContainer.nativeElement.appendChild(this.renderer.domElement)
 
     // make things
-    const geometry = new BoxGeometry(300, 300, 300)
+    const geometry = new BoxGeometry(1, 1, 1)
     const material = new MeshPhongMaterial({ color: 0x123123, wireframe: false })
     const mesh = new Mesh(geometry, material)
     mesh.castShadow = true
     this.things.cube = mesh
-    //this.scene.add(this.things.cube)
+    this.scene.add(this.things.cube)
 
     // make paper
     const paperGeo = new PlaneGeometry(7, 7)
@@ -132,6 +150,11 @@ export class ShowComponent extends Show implements OnInit {
 
     // update orbit
     // this.controls.update()
+
+    // update matter
+    Engine.update(this.engine, 1000 / 60)
+    this.things.cube.position.y =  this.engine.world.bodies[0].position.y / -100
+    console.log(this.engine.world.bodies[0].position.y)
 
     // render
     this.renderer.render(this.scene, this.camera)
