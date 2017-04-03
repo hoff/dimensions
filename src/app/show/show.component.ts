@@ -144,12 +144,10 @@ export class ShowComponent extends Show implements OnInit {
         let note = this.notes[message.key - 36]
         //note.position.z = 1
         console.log(message.velocity)
-        this.animateJump(3 * message.velocity).subscribe(val => {
+        this.animateJump(3 * message.velocity).subscribe((val: number) => {
           note.position.z = val
-        })
-
-        this.animateJump(2).subscribe((val: number) => {
-          // move the blall
+          let scale = val * 4
+          note.scale.set(scale, scale, scale)
         })
       }
     })
