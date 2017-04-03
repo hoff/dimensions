@@ -2,8 +2,7 @@
 <div #sceneContainer style="width: 100vw; height: 700px; margin: 0px auto;"></div>
 
 
-<div #matterContainer style="width: 800; height: 600; border:3px solid lime;">
-</div>
+
 
 
 
@@ -13,11 +12,14 @@
   {{ thing.key }}, {{ thing.value }}
 </div>
 
-{{ jo }}
+
 
 spot light shadow intensity: {{ lights.spot.itensity }}
 <input *ngIf="lights.spot" type="range" (change)="lights.spot.intensity = $event.target.value" min="0" max="1.5" step="0.05" />
 
 <div *ngFor="let thing of scene.children">
   <span (click)="thing.visible = !thing.visible">{{thing.type }} visible? {{ thing.visible }}</span>
+</div>
+
+<div #matterContainer style="width: 800; height: 600; border:3px solid lime;">
 </div>

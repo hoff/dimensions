@@ -115,7 +115,7 @@ export class Show {
     const shadow = this.spot.shadow
 
     this.lights.spot = this.spot
-    this.scene.add(this.spot)
+    //this.scene.add(this.spot)
 
     const spotLightHelper = new SpotLightHelper( this.spot );
     this.scene.add( spotLightHelper )

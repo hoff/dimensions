@@ -37,11 +37,11 @@ export class AnimationService {
       return Math.pow(2, -10 * t) * Math.sin((t - p / 4) * (2 * Math.PI) / p) + 1;
     },
 
-    parabola: function (t) {
+    /*parabola: function (t) {
       let a = -1
       let x = t - 3
       return a * (x * x)
-    }
+    }*/
 
   }
 

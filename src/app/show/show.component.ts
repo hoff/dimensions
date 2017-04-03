@@ -61,6 +61,8 @@ export class ShowComponent extends Show implements OnInit {
   things: any = {}
   xSpeed = 0
 
+  cmesh: Mesh
+
   matterEngine: any
   engine: Engine
   matterRender: Render
@@ -101,7 +103,7 @@ export class ShowComponent extends Show implements OnInit {
     const mesh = new Mesh(geometry, material)
     mesh.castShadow = true
     this.things.cube = mesh
-    this.scene.add(this.things.cube)
+    //this.scene.add(this.things.cube)
 
     // make paper
     const paperGeo = new PlaneGeometry(7, 7)
@@ -116,7 +118,7 @@ export class ShowComponent extends Show implements OnInit {
     const cubeMesh = new Mesh(cubeGeo, cubeMat)
     cubeMesh.position.z = 0.5
     cubeMesh.castShadow = true
-    this.scene.add(cubeMesh)
+    //this.scene.add(cubeMesh)
 
     // subscribe to inputs
     this.midi.knobs.knob1.observable.subscribe(val => {
@@ -146,6 +148,12 @@ export class ShowComponent extends Show implements OnInit {
 
     // subscribe to keys
     let sub = Observable.fromEvent(window, 'keypress').subscribe(event => {
+
+      this.animateJump(3).subscribe((y: number) => {
+        console.log('sup', y)
+        this.cmesh.position.z = y + 0.5
+      })
+
       this.animation.animateValue('bounce', 1000, 0, -3, cubeMesh.position, 'x', () => {
         console.log('animation done')
       })
@@ -167,7 +175,7 @@ export class ShowComponent extends Show implements OnInit {
         cubeMesh.position.x = xOffset
         xOffset += 0.8
         cubeMesh.castShadow = true
-        this.scene.add(cubeMesh)
+        //this.scene.add(cubeMesh)
 
         let backForth = () => this.animation.animateValue(easingKey, 1000, 0, 2, cubeMesh.position, 'y', () => {
           console.log('done')
@@ -176,11 +184,72 @@ export class ShowComponent extends Show implements OnInit {
             backForth()
           })
         })
-        backForth()
+        //backForth()
 
       }
+
+
+
     }
 
+    // parabola!
+    const cg = new BoxGeometry(1, 1, 1)
+    const cm = new MeshPhongMaterial({ color: 0x0000ff })
+    this.cmesh = new Mesh(cg, cm)
+    this.cmesh.castShadow = true
+    this.cmesh.position.y = 0.5
+    this.cmesh.visible = true
+    this.scene.add(this.cmesh)
+
+
+    console.log('animate!')
+    this.animateJump(3).subscribe((y: number) => {
+      console.log('sup', y)
+      this.cmesh.position.z = y
+    })
+
+
+
+
+  }
+
+  /** a parabola, starting at 0 */
+
+  jumpPosition = (height, percent) => {
+    let a = -1
+
+    let xOffset = Math.sqrt(height) * -1
+    let totalX = xOffset * -2
+
+    let x = (totalX * percent) + xOffset
+
+    return (-1 * (x * x)) + height
+  }
+
+  animateJump(height) {
+
+    return new Observable(stream => {
+      // duration is a function of the height, and a factor speed
+      let durationMS = Math.sqrt(height) * 300 // say 2 becomes 400
+      //let durationMS = 2000
+      let start = new Date().getTime()
+      let end = start + durationMS
+      let step = () => {
+        let now = new Date().getTime()
+        let progress
+        if (now > end) {
+          progress = 1
+        } else {
+          progress = (now - start) / durationMS // percent as decimal
+        }
+        let y = this.jumpPosition(height, progress)
+        stream.next(y)
+        if (progress < 1) {
+          requestAnimationFrame(step)
+        }
+      }
+      step()
+    }).share()
   }
 
   parabola = (x) => {
