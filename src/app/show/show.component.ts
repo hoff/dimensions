@@ -79,21 +79,6 @@ export class ShowComponent extends Show implements OnInit {
   }
 
   ngOnInit() {
-    // matter
-    this.engine = Engine.create()
-    let boxA = Bodies.rectangle(300, 80, 20, 20)
-    let boxB = Bodies.rectangle(310, 50, 20, 20)
-    let ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true })
-    World.add(this.engine.world, [boxA, boxB, ground])
-
-
-    this.matterRender = Render.create({
-      element: this.matterContainer.nativeElement,
-      engine: this.engine
-    })
-
-
-    //Engine.run(this.engine)
 
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
 
@@ -112,7 +97,7 @@ export class ShowComponent extends Show implements OnInit {
     const paperMaterial = new MeshPhongMaterial({ color: 0xffffff })
     const paperMesh = new Mesh(paperGeo, paperMaterial)
     paperMesh.receiveShadow = true
-    this.scene.add(paperMesh)
+    //this.scene.add(paperMesh)
 
     // advanced cube
     const cubeGeo = new BoxGeometry(1, 1, 1)
@@ -142,35 +127,24 @@ export class ShowComponent extends Show implements OnInit {
 
         // - 36
         let note = this.notes[message.key - 36]
-        //note.position.z = 1
-        console.log(message.velocity)
+
         this.animateJump(3 * message.velocity).subscribe((val: number) => {
           note.position.z = val
+          note.position.y = val * 4
+
           let scale = val * 4
           note.scale.set(scale, scale, scale)
         })
       }
     })
 
-    // listen to midi keys
-    /*this.midi.keyboardStream.subscribe(message => {
-      console.log('midi keyboar')
-      this.animateJump(3).subscribe((y: any) => {
-        this.cmesh.position.y = y
-      })
-    })*/
+    
 
 
-    // directional light position
-    this.midi.knobs.knob5.observable.subscribe(val => {
-      this.directional.position.x = (val - 0.5) * 1000
-    })
 
     // kick off animation loop
     this.animate()
-    this.animation.animateValue('easeInOutQuad', 1000, 0, 3, cubeMesh.position, 'x', () => {
-      console.log('animation done')
-    })
+
 
     // z-rotation
     this.animation.animateValue('easeInOutQuad', 1000, 0, this.toRadians(360), cubeMesh.rotation, 'z', () => {
@@ -189,7 +163,6 @@ export class ShowComponent extends Show implements OnInit {
         console.log('animation done')
       })
     })
-    
 
     const boxSize = 0.2
     const boxDistance = boxSize / 10
@@ -233,9 +206,8 @@ export class ShowComponent extends Show implements OnInit {
   animateJump(height) {
 
     return new Observable(stream => {
-      // duration is a function of the height, and a factor speed
       let durationMS = Math.sqrt(height) * 300 // say 2 becomes 400
-      //let durationMS = 2000
+      durationMS = 2000
       let start = new Date().getTime()
       let end = start + durationMS
       let step = () => {
@@ -264,19 +236,9 @@ export class ShowComponent extends Show implements OnInit {
   animate = () => {
     requestAnimationFrame(this.animate)
 
-    // do your thing
     // update cube's position
     const cube: Mesh = this.things.cube
     cube.position.x = cube.position.x + this.xSpeed
-
-    // update orbit
-    // this.controls.update()
-
-    // update matter
-    //Engine.update(this.engine, 1000 / 60)
-    //Render.run(this.matterRender)
-    //this.things.cube.position.y =  this.engine.world.bodies[0].position.y
-    //console.log(this.engine.world.bodies[0].position.y)
 
     // render
     this.renderer.render(this.scene, this.camera)

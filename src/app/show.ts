@@ -118,7 +118,7 @@ export class Show {
     //this.scene.add(this.spot)
 
     const spotLightHelper = new SpotLightHelper( this.spot );
-    this.scene.add( spotLightHelper )
+    //this.scene.add( spotLightHelper )
 
     // ambient
     this.ambient = new AmbientLight(0xffffff)
@@ -128,7 +128,7 @@ export class Show {
     const helper = new DirectionalLightHelper(this.directional);
     const camHelper = new CameraHelper(this.directional.shadow.camera);
 
-    this.scene.add(helper)
-    this.scene.add(camHelper)
+    //this.scene.add(helper)
+    //this.scene.add(camHelper)
   }
 }
