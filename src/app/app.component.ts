@@ -192,10 +192,10 @@ export class AppComponent implements OnInit {
 
   onMIDIMessage = (message) => {
 
-    console.log(message.data)
+    //console.log(message)
 
     // highlight note
-    const [type, key, pressure] = message.data
+    /*const [type, key, pressure] = message.data
     const ball: Mesh = this.ballNotes[key - 36]
     if (type === 144) {
       // down
@@ -210,7 +210,7 @@ export class AppComponent implements OnInit {
       // ball.visible = false
     } else if (type === 176 && key === 7) {
       this.scaleFactor = (pressure - 64) / 64
-    }
+    }*/
   }
 
   /**

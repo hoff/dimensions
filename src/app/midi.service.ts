@@ -7,6 +7,13 @@ import 'rxjs/Rx'*/
 import { Observable, Subscribable } from 'rxjs/Observable'
 import 'rxjs/Rx'
 
+interface keyboardMessage {
+  keyNumber: number
+  keyName: string
+  /** between 0 and 1 */
+  velocity: number
+}
+
 @Injectable()
 export class MIDIService {
 
@@ -15,6 +22,10 @@ export class MIDIService {
    */
   midiMessageStream: any
   midiMessageObservable: Subscribable<any>
+
+  // keyboard observable
+  keyboardSource: any
+  keyboardStream: Subscribable<keyboardMessage>
 
   /**
    * Knob data for creating know observables and streams
@@ -77,6 +88,11 @@ export class MIDIService {
       this.midiMessageStream = stream
     }).share()
 
+    // create an observable keyboard event stream, and hold on to it's source
+    this.keyboardStream = new Observable(source => {
+      this.keyboardSource = source
+    })
+
 
   /**
    * Create knob objects, which contain the knob's observable, and her stream
@@ -112,8 +128,38 @@ export class MIDIService {
   onMIDIMessage = (message) => {
     const [action, key, value] = message.data
 
+    let msg
+    let control
+    let eventName
+    let keyName
+    let velocity
+
+    switch (action) {
+      case 144:
+        msg = {
+          control: 'keyboard',
+          name: 'keydown',
+          key: key,
+          keyName: 'C1', // todo
+          velocity: value / 127,
+        }
+        break
+
+      case 128:
+       msg = {
+          control: 'keyboard',
+          name: 'keyup',
+          key: key,
+          keyName: 'C1', // todo
+          velocity: value / 127,
+        }
+        break
+    }
+
     // the stream receives all midi messages
-    this.midiMessageStream.next(message)
+    // just pass a more advance message
+    this.midiMessageStream.next(msg)
+    //this.keyboardSource.next(message)
 
 
     // write to knob stream if incoming key (e.g. 93) maps

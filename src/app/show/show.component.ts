@@ -63,6 +63,8 @@ export class ShowComponent extends Show implements OnInit {
 
   cmesh: Mesh
 
+  notes = []
+
   matterEngine: any
   engine: Engine
   matterRender: Render
@@ -130,6 +132,37 @@ export class ShowComponent extends Show implements OnInit {
       cube.scale.set(newScale, newScale, newScale)
     })
 
+    this.midi.midiMessageObservable.subscribe(message => {
+      if (message.name === 'keydown') {
+        console.log(message.key)
+
+        for (let note of this.notes) {
+          note.position.z = 0
+        }
+
+        // - 36
+        let note = this.notes[message.key - 36]
+        //note.position.z = 1
+        console.log(message.velocity)
+        this.animateJump(3 * message.velocity).subscribe(val => {
+          note.position.z = val
+        })
+
+        this.animateJump(2).subscribe((val: number) => {
+          // move the blall
+        })
+      }
+    })
+
+    // listen to midi keys
+    /*this.midi.keyboardStream.subscribe(message => {
+      console.log('midi keyboar')
+      this.animateJump(3).subscribe((y: any) => {
+        this.cmesh.position.y = y
+      })
+    })*/
+
+
     // directional light position
     this.midi.knobs.knob5.observable.subscribe(val => {
       this.directional.position.x = (val - 0.5) * 1000
@@ -158,6 +191,8 @@ export class ShowComponent extends Show implements OnInit {
         console.log('animation done')
       })
     })
+
+
 
     // ALL ANIMATIONS
     let xOffset = -5
@@ -192,21 +227,26 @@ export class ShowComponent extends Show implements OnInit {
 
     }
 
-    // parabola!
-    const cg = new BoxGeometry(1, 1, 1)
-    const cm = new MeshPhongMaterial({ color: 0x0000ff })
-    this.cmesh = new Mesh(cg, cm)
-    this.cmesh.castShadow = true
-    this.cmesh.position.y = 0.5
-    this.cmesh.visible = true
-    this.scene.add(this.cmesh)
+    const boxSize = 0.2
+    const boxDistance = boxSize / 10
+
+    for (let i = -24; i < 25; i++) {
+      const geo = new BoxGeometry(boxSize, boxSize, boxSize)
+      const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215) })
+      const mymesh = new Mesh(geo, mat)
+      mymesh.castShadow = true
+      mymesh.position.z = (boxSize / 2) + 0.1
+      mymesh.position.x = (i * boxSize) + ( i * boxDistance)
+      this.scene.add(mymesh)
+      this.notes.push(mymesh)
+    }
+
+    // making a cube
 
 
-    console.log('animate!')
-    this.animateJump(3).subscribe((y: number) => {
-      console.log('sup', y)
-      this.cmesh.position.z = y
-    })
+
+
+
 
 
 
@@ -281,6 +321,8 @@ export class ShowComponent extends Show implements OnInit {
   toRadians(angle) {
     return angle * (Math.PI / 180);
   }
+
+  
 
 
 
