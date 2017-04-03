@@ -137,7 +137,7 @@ export class ShowComponent extends Show implements OnInit {
         console.log(message.key)
 
         for (let note of this.notes) {
-          note.position.z = 0
+          note.position.z = 0.5
         }
 
         // - 36
@@ -191,41 +191,7 @@ export class ShowComponent extends Show implements OnInit {
         console.log('animation done')
       })
     })
-
-
-
-    // ALL ANIMATIONS
-    let xOffset = -5
-    for (let easingKey in this.animation.EasingFunctions) {
-
-      if (this.animation.EasingFunctions.hasOwnProperty(easingKey)) {
-        let value = this.animation.EasingFunctions[easingKey]
-        console.log(easingKey)
-        console.log(value)
-
-        const cubeGeo = new BoxGeometry(0.7, 0.7, 0.7)
-        const cubeMat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215) })
-        const cubeMesh = new Mesh(cubeGeo, cubeMat)
-        cubeMesh.position.z = 0.5
-        cubeMesh.position.x = xOffset
-        xOffset += 0.8
-        cubeMesh.castShadow = true
-        //this.scene.add(cubeMesh)
-
-        let backForth = () => this.animation.animateValue(easingKey, 1000, 0, 2, cubeMesh.position, 'y', () => {
-          console.log('done')
-          this.animation.animateValue(easingKey, 1000, 2, 0, cubeMesh.position, 'y', () => {
-            console.log('animation done')
-            backForth()
-          })
-        })
-        //backForth()
-
-      }
-
-
-
-    }
+    
 
     const boxSize = 0.2
     const boxDistance = boxSize / 10
