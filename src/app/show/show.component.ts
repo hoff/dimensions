@@ -8,10 +8,10 @@ import { AnimationService } from '../animation.service'
 import { Observable } from 'rxjs/Observable'
 
 import {
-    Engine,
-    Render,
-    World,
-    Bodies,
+  Engine,
+  Render,
+  World,
+  Bodies,
 } from 'matter-js'
 
 
@@ -56,12 +56,14 @@ export class ShowComponent extends Show implements OnInit {
   @Input('show') show // not in use
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
+  @ViewChild('matterContainer') matterContainer: ElementRef
 
   things: any = {}
   xSpeed = 0
 
   matterEngine: any
   engine: Engine
+  matterRender: Render
 
   constructor(
     public midi: MIDIService,
@@ -69,16 +71,25 @@ export class ShowComponent extends Show implements OnInit {
   ) {
     super()
     this.matterEngine = Engine
+
   }
 
   ngOnInit() {
     // matter
     this.engine = Engine.create()
-    let boxA = Bodies.rectangle(400, 200, 80, 80)
-    let boxB = Bodies.rectangle(450, 50, 80, 80)
+    let boxA = Bodies.rectangle(300, 80, 20, 20)
+    let boxB = Bodies.rectangle(310, 50, 20, 20)
     let ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true })
     World.add(this.engine.world, [boxA, boxB, ground])
-    Engine.run(this.engine)
+
+
+    this.matterRender = Render.create({
+      element: this.matterContainer.nativeElement,
+      engine: this.engine
+    })
+
+
+    //Engine.run(this.engine)
 
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
 
@@ -127,6 +138,8 @@ export class ShowComponent extends Show implements OnInit {
     this.animation.animateValue('easeInOutQuad', 1000, 0, 3, cubeMesh.position, 'x', () => {
       console.log('animation done')
     })
+
+    // z-rotation
     this.animation.animateValue('easeInOutQuad', 1000, 0, this.toRadians(360), cubeMesh.rotation, 'z', () => {
       console.log('animation done')
     })
@@ -138,6 +151,41 @@ export class ShowComponent extends Show implements OnInit {
       })
     })
 
+    // ALL ANIMATIONS
+    let xOffset = -5
+    for (let easingKey in this.animation.EasingFunctions) {
+
+      if (this.animation.EasingFunctions.hasOwnProperty(easingKey)) {
+        let value = this.animation.EasingFunctions[easingKey]
+        console.log(easingKey)
+        console.log(value)
+
+        const cubeGeo = new BoxGeometry(0.7, 0.7, 0.7)
+        const cubeMat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215) })
+        const cubeMesh = new Mesh(cubeGeo, cubeMat)
+        cubeMesh.position.z = 0.5
+        cubeMesh.position.x = xOffset
+        xOffset += 0.8
+        cubeMesh.castShadow = true
+        this.scene.add(cubeMesh)
+
+        let backForth = () => this.animation.animateValue(easingKey, 1000, 0, 2, cubeMesh.position, 'y', () => {
+          console.log('done')
+          this.animation.animateValue(easingKey, 1000, 2, 0, cubeMesh.position, 'y', () => {
+            console.log('animation done')
+            backForth()
+          })
+        })
+        backForth()
+
+      }
+    }
+
+  }
+
+  parabola = (x) => {
+    let a = -1
+    return a * (x * x)
   }
 
   animate = () => {
@@ -152,9 +200,10 @@ export class ShowComponent extends Show implements OnInit {
     // this.controls.update()
 
     // update matter
-    Engine.update(this.engine, 1000 / 60)
-    this.things.cube.position.y =  this.engine.world.bodies[0].position.y / -100
-    console.log(this.engine.world.bodies[0].position.y)
+    //Engine.update(this.engine, 1000 / 60)
+    //Render.run(this.matterRender)
+    //this.things.cube.position.y =  this.engine.world.bodies[0].position.y
+    //console.log(this.engine.world.bodies[0].position.y)
 
     // render
     this.renderer.render(this.scene, this.camera)

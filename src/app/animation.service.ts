@@ -22,9 +22,9 @@ export class AnimationService {
     // accelerating from zero velocity
     easeInQuart: function (t) { return t * t * t * t },
     // decelerating to zero velocity
-    easeOutQuart: function (t) { return 1 - (--t) * t * t * t },
+    //easeOutQuart: function (t) { return 1 - (--t) * t * t * t },
     // acceleration until halfway, then deceleration
-    easeInOutQuart: function (t) { return t < .5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t },
+    //easeInOutQuart: function (t) { return t < .5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t },
     // accelerating from zero velocity
     easeInQuint: function (t) { return t * t * t * t * t },
     // decelerating to zero velocity
@@ -35,6 +35,12 @@ export class AnimationService {
     bounce: function (t) {
       let p = 0.3;
       return Math.pow(2, -10 * t) * Math.sin((t - p / 4) * (2 * Math.PI) / p) + 1;
+    },
+
+    parabola: function (t) {
+      let a = -1
+      let x = t - 3
+      return a * (x * x)
     }
 
   }
@@ -46,7 +52,6 @@ export class AnimationService {
     let end = start + durationMS
 
     let step = () => {
-      console.log('step!')
 
       let now = new Date().getTime()
       let progress
@@ -56,8 +61,6 @@ export class AnimationService {
       } else {
         progress = (now - start) / durationMS // percent as decimal
       }
-
-      console.log('progress', progress)
       // now you know how much progress you've made. use this to calculate position!
       let easingProgress = this.EasingFunctions[easing](progress)
       let delta = to - from
@@ -70,6 +73,7 @@ export class AnimationService {
         requestAnimationFrame(step)
       } else {
         if (whendone) {
+          whendone()
         }
       }
     }
