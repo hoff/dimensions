@@ -103,66 +103,27 @@ export class ShowComponent extends Show implements OnInit {
 
   ngOnInit() {
 
-    // MIDI PLAYER
-    /* load and play a midi song */
-    MIDI.loader = new sketch.ui.Timer
-    MIDI.loadPlugin({
-      soundfontUrl: '/assets/soundfont/',
-      onprogress: function (state, progress) {
-        MIDI.loader.setValue(progress * 100);
-      },
-      onsuccess: () => {
-        /// this sets up the MIDI.Player and gets things going...
-        this.player = MIDI.Player;
-        this.player.timeWarp = 1; // speed the song is played back
-
-        // load song and do nothing
-        this.player.loadFile(songs[2], () => { 
-          console.log('song loaded')
-        });
-
-        this.player.addListener((data) => { 
-          
-          let now = data.now; // where we are now
-          let end = data.end; // time when song ends
-          let channel = data.channel; // channel note is playing on
-          let message = data.message; // 128 is noteOff, 144 is noteOn
-          let note = data.note; // the note
-          let velocity = data.velocity; // the velocity of the note
-
-          // run the keydown function
-          let msg = {key: note, velocity: velocity / 127}
-          this.keydownFunction(msg)
-        })
-      }
-    });
-
     /**
-     * call your parent's (Show's) setup function
+     * call your parent (show) setup function
      */
-
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
+
 
     // setup the renderer inside the container
     this.sceneContainer.nativeElement.appendChild(this.renderer.domElement)
 
 
-    // make paper
-    const paperGeo = new PlaneGeometry(7, 7)
-    const paperMaterial = new MeshPhongMaterial({ color: 0xffffff })
-    const paperMesh = new Mesh(paperGeo, paperMaterial)
-    paperMesh.receiveShadow = true
-    //this.scene.add(paperMesh)
-
+    /**
+     * Reacting to MIDI events
+     *
+     * - knob turns
+     * - and key presses
+     */
     this.midi.stream.subscribe(message => {
-
-      /** Everything happens here */
 
       if (!message) {
         console.log('no message passed')
         return
-      } else {
-        //console.log(message)
       }
 
       // R1: parabola's a
@@ -177,23 +138,24 @@ export class ShowComponent extends Show implements OnInit {
 
       // R3: jump height
       if (message.keyName === 'R3') {
-        this.jumpHeight = (message.decimal * 10)
+        this.jumpHeight = (message.decimal * 100)
       }
 
-      // stop playing sound on keyup
-      if (message.name === 'keyup') {
-        MIDI.noteOff(0, message.key, message.velocity)
-      }
-
-      // play sound and a bunch of things
+      /**
+       * Keydown:
+       *
+       * - play sound
+       * - run keydown animation
+       */
       if (message.name === 'keydown') {
-
         // play sound
         MIDI.noteOn(0, message.key, message.velocity * 127, 0)
-
         this.keydownFunction(message)
+      }
 
-
+       // stop playing sound on keyup
+      if (message.name === 'keyup') {
+        MIDI.noteOff(0, message.key, message.velocity)
       }
     })
 
@@ -204,7 +166,7 @@ export class ShowComponent extends Show implements OnInit {
 
     /** BOX MAKING */
 
-    const boxSize = 0.2
+    const boxSize = 0.5
     const boxDistance = boxSize / 10
 
     let colorRange = colors['I. J. Belmont (1944)']

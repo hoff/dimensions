@@ -55,15 +55,6 @@ export class ColorPageComponent implements OnInit {
   constructor(
     private midi: MIDIService,
   ) {
-    this.midi.knobs.knob1.observable.subscribe(decimal => {
-      this.hueDecimal = decimal
-    })
-    this.midi.knobs.knob2.observable.subscribe(decimal => {
-      this.satDecimal = decimal
-    })
-    this.midi.knobs.knob3.observable.subscribe(decimal => {
-      this.lightDecimal = decimal
-    })
   }
 
   ngOnInit() {

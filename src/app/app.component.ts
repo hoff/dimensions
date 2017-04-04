@@ -38,16 +38,6 @@ interface Country {
   population: number
 }
 
-interface MIDI {
-    loader: any
-    loadPlugin: any
-    Player: any
-    triangulate(input: any): any
-}
-declare var MIDI: MIDI
-
-
-declare var sketch: any
 
 
 @Component({
@@ -119,88 +109,9 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
 
-    /* load and play a midi song */
-    MIDI.loader = new sketch.ui.Timer;
-		MIDI.loadPlugin({
-			soundfontUrl: "/assets/soundfont/",
-			onprogress: function(state, progress) {
-				MIDI.loader.setValue(progress * 100);
-			},
-			onsuccess: () => {
-				/// this sets up the MIDI.Player and gets things going...
-				this.player = MIDI.Player;
-				this.player.timeWarp = 1; // speed the song is played back
-
-				// load song and start playing
-				this.player.loadFile(songs[1], () => {});
-
-				this.player.addListener(function(data) { // set it to your own function!
-					var now = data.now; // where we are now
-					var end = data.end; // time when song ends
-					var channel = data.channel; // channel note is playing on
-					var message = data.message; // 128 is noteOff, 144 is noteOn
-					var note = data.note; // the note
-					var velocity = data.velocity; // the velocity of the note
-					// then do whatever you want with the information!
-					console.log(note)
-				});
-
-			}
-		});
+   
 
 
-
-    this.midi.knobs.master.observable.subscribe(value => {
-      console.log('master is now at', value)
-    })
-
-    console.warn(this.midi.knobs)
-
-    this.scene = new Scene()
-    this.scene.background = new Color(0xffffff)
-
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
-    //this.camera = new OrthographicCamera(75, window.innerWidth / window.innerHeight, 1, 10000)
-    this.camera.position.z = 1000
-
-    // lights
-    const ambient = new AmbientLight(this.randomColorHex())
-    const directional = new DirectionalLight(this.randomColorHex(), 0.1)
-
-    // sample cube
-    const geometry = new BoxGeometry(200, 200, 200)
-    let material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-    material = <any>new MeshBasicMaterial({ color: 0xff0000, wireframe: false })
-    this.mesh = new Mesh(geometry, material)
-    // this.scene.add(this.mesh)
-
-    // add lights
-    this.scene.add(ambient)
-    this.scene.add(directional)
-
-    for (const country of this.countries) {
-      // ball
-      const ballGeo = new SphereGeometry(country.population, 10, 10)
-      const ballMat = new MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-      const ballMesh = new Mesh(ballGeo, ballMat)
-      //ballMesh.position.setY(country.population)
-      //this.scene.add(ballMesh)
-    }
-
-    this.makeNotes()
-
-
-    this.renderer = new WebGLRenderer()
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
-    this.sceneContainer.nativeElement.appendChild(this.renderer.domElement)
-
-    // kick off animation
-    this.animate()
-
-
-    this.midi.stream.subscribe(message => {
-      this.onMIDIMessage(message)
-    })
 
   }
 

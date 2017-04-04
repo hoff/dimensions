@@ -1,35 +1,28 @@
 
 
-<div #sceneContainer style="width: 100vw; height: 80vh; margin: 0px auto;"></div>
+<div #sceneContainer style="width: 100vw; height: 70vh; margin: 0px auto;"></div>
 
-<span>R1 (jump s): {{ jumpA }}</span>
-<span>R2 (jump ms): {{ jumpMS }}</span>
-<span>R3 (jumst height) {{ jumpHeight }}</span>
-
-
-
-<button (click)="player.start()">play</button>
-<button (click)="player.stop()">stop</button>
-
+<div style="width: 100vw; height: 30vh; background-color:#333; padding: 20px; color: white; overflow: scroll;">
+  
+  <!--- knobs -->
+  
+    <span>R1 (jump s): {{ jumpA }}</span>
+    <span>R2 (jump ms): {{ jumpMS }}</span>
+    <span>R3 (jumst height) {{ jumpHeight }}</span>
 
 
+<!-- SONG PLAYING -->
+
+<button (click)="midi.player.start()">play</button>
+<button (click)="midi.player.stop()">stop</button>
+
+<button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">play {{ song.name }}</button>
 
 
-
-
+<!-- THINGS -->
 <h2>Things in this show</h2>
-<div *ngFor="let thing of things | mapToIterable">
-  {{ thing.key }}, {{ thing.value }}
+
 </div>
 
 
 
-spot light shadow intensity: {{ lights.spot.itensity }}
-<input *ngIf="lights.spot" type="range" (change)="lights.spot.intensity = $event.target.value" min="0" max="1.5" step="0.05" />
-
-<div *ngFor="let thing of scene.children">
-  <span (click)="thing.visible = !thing.visible">{{thing.type }} visible? {{ thing.visible }}</span>
-</div>
-
-<div #matterContainer style="width: 800; height: 600; border:3px solid lime;">
-</div>
