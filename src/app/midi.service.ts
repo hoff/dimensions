@@ -73,6 +73,16 @@ export class MIDIService {
   // mapping midi keys to knob names (dynamcally created from above)
   knobMap = { }
 
+  keyNameMap = {
+    7: 'master',
+    91: 'R1',
+    92: 'R2',
+    74: 'R3',
+    71: 'R4',
+    73: 'R5',
+
+  }
+
   constructor() {
     const nav: any = navigator
     if (nav.requestMIDIAccess) {
@@ -128,6 +138,8 @@ export class MIDIService {
   onMIDIMessage = (message) => {
     const [action, key, value] = message.data
 
+    console.log('MIDI service received action, key, value: ', message.data)
+
     let msg
     let control
     let eventName
@@ -154,19 +166,19 @@ export class MIDIService {
           velocity: value / 127,
         }
         break
+
+        case 176:
+        msg = {
+          name: 'turn',
+          key: key,
+          keyName: this.keyNameMap[key],
+          control: 'dial',
+          decimal: value / 127
+        }
+        break
     }
 
-    // the stream receives all midi messages
-    // just pass a more advance message
+    // pass down the message stream
     this.midiMessageStream.next(msg)
-    //this.keyboardSource.next(message)
-
-
-    // write to knob stream if incoming key (e.g. 93) maps
-    if (action === 176 && this.knobMap[key]) {
-      console.log('got a mapping to key', key, this.knobMap[key])
-      const knobKey = this.knobMap[key]
-      this.knobs[knobKey].stream.next(value / 127)
-    }
   }
 }
