@@ -198,7 +198,7 @@ export class AppComponent implements OnInit {
     this.animate()
 
 
-    this.midi.midiMessageObservable.subscribe(message => {
+    this.midi.stream.subscribe(message => {
       this.onMIDIMessage(message)
     })
 

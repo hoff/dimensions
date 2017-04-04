@@ -57,7 +57,9 @@
 		};
 
 		midi.noteOn = function(channelId, noteId, velocity, delay) {
-			console.log('note ON!', noteId, channelId, velocity)
+
+			// this seems to play that sound!!
+			//console.log('note ON!', noteId, channelId, velocity)
 
 			delay = delay || 0;
 

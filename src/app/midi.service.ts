@@ -20,8 +20,8 @@ export class MIDIService {
   /**
    * Observable and Stream for ALL midi messages
    */
-  midiMessageStream: any
-  midiMessageObservable: Subscribable<any>
+  source: any
+  stream: Subscribable<any>
 
   // keyboard observable
   keyboardSource: any
@@ -76,7 +76,7 @@ export class MIDIService {
   keyNameMap = {
     7: 'master',
     91: 'R1',
-    92: 'R2',
+    93: 'R2',
     74: 'R3',
     71: 'R4',
     73: 'R5',
@@ -94,8 +94,8 @@ export class MIDIService {
     }
 
     // create an observable with local stream source
-    this.midiMessageObservable = new Observable(stream => {
-      this.midiMessageStream = stream
+    this.stream = new Observable(source => {
+      this.source = source
     }).share()
 
     // create an observable keyboard event stream, and hold on to it's source
@@ -136,9 +136,9 @@ export class MIDIService {
     console.log('No access to MIDI devices or your browser does not support WebMIDI API.')
   }
   onMIDIMessage = (message) => {
-    const [action, key, value] = message.data
 
-    console.log('MIDI service received action, key, value: ', message.data)
+    const [action, key, value] = message.data
+    // console.log('MIDI service received action, key, value: ', message.data)
 
     let msg
     let control
@@ -179,6 +179,6 @@ export class MIDIService {
     }
 
     // pass down the message stream
-    this.midiMessageStream.next(msg)
+    this.source.next(msg)
   }
 }
