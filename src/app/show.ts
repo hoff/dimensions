@@ -79,12 +79,15 @@ export class Show {
 
     this.camera = new PerspectiveCamera(75, this.el.scrollWidth / this.el.scrollHeight, 1, 10000)
     this.camera.position.z = 5
+    
 
     // controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enabled = true;
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
+    this.controls.autoRotate = true
+    
 
     // lights
     this.ambient = new AmbientLight(0xffab12)
