@@ -2,29 +2,31 @@
 
 <div #sceneContainer style="width: 100vw; height: 70vh; margin: 0px auto;"></div>
 
-<div style="width: 100vw; height: 30vh; background-color:#333; padding: 20px; color: white; overflow: scroll;">
+<div style="width: 100vw; height: 30vh; border-top: 1px solid #333; background-color:#111; padding: 20px; color: #ddd; overflow: scroll;">
   
-  <!--- knobs create and map dynamically -->
-  <div *ngFor="let knob of midi.knobs | mapToIterable">
-    {{ knob.key }} is {{ knob.val }}
-  </div>
+  <!--- sliders -->
 
-  
-    <span>R1 (jump s): {{ jumpA }}</span>
-    <span>R2 (jump ms): {{ jumpMS }}</span>
-    <span>R3 (jumst height) {{ jumpHeight }}</span>
+  <!--- knobs  -->
+  <flex-row-around>
+<flex-col>{{ midi.knobs['R1'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R2'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R3'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R4'] | decimalToPercent }}% </flex-col>
+
+<flex-col>{{ midi.knobs['R5'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R6'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R7'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R8'] | decimalToPercent }}% </flex-col>
+  </flex-row-around>
 
 
 <!-- SONG PLAYING -->
+<div style="height: 40px;"></div>
 
 <button (click)="midi.player.start()">play</button>
 <button (click)="midi.player.stop()">stop</button>
 
 <button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
-
-
-<!-- THINGS -->
-<h2>Things in this show</h2>
 
 </div>
 

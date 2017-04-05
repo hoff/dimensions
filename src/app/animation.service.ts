@@ -102,7 +102,7 @@ export class AnimationService {
           progress = (now - start) / durationMS // percent as decimal
         }
         // now you know how much progress you've made. use this to calculate position!
-        let easingProgress = this.EasingFunctions[easing](progress)
+        let easingProgress: number = this.EasingFunctions[easing](progress)
         stream.next(easingProgress)
 
         // call yourself

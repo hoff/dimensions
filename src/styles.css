@@ -15,3 +15,20 @@ button {
 	padding: 15px;
 	border: 1px solid #222;
 }
+
+flex-row {
+	display: flex;
+}
+flex-row-around {
+	display: flex;
+	justify-content: space-around;
+}
+
+flex-col {
+	display: flex;
+	flex-direction: column;
+}
+flex-col-center {
+	display: flex;
+	align-items: center;
+}

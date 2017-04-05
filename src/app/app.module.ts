@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, Routes } from '@angular/router'
@@ -9,7 +9,9 @@ import { MIDIService } from './midi.service';
 import { AnimationService } from './animation.service'
 import { ColorPageComponent } from './color-page/color-page.component';
 import { ShowComponent } from './show/show.component';
-import { MapToIterablePipe } from './map-to-iterable.pipe'
+import { MapToIterablePipe } from './map-to-iterable.pipe';
+import { StringifyPipe } from './stringify.pipe';
+import { DecimalToPercentPipe } from './decimal-to-percent.pipe'
 
 const appRoutes: Routes = [
   { path: '', component: ColorPageComponent},
@@ -23,6 +25,8 @@ const appRoutes: Routes = [
     ColorPageComponent,
     ShowComponent,
     MapToIterablePipe,
+    StringifyPipe,
+    DecimalToPercentPipe,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
@@ -34,6 +38,9 @@ const appRoutes: Routes = [
   providers: [
      MIDIService,
      AnimationService,
+  ],
+  schemas: [
+    CUSTOM_ELEMENTS_SCHEMA
   ],
   bootstrap: [AppComponent]
 })

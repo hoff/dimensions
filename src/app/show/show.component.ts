@@ -65,17 +65,9 @@ export class ShowComponent extends Show implements OnInit {
   @ViewChild('sceneContainer') sceneContainer: ElementRef
   @ViewChild('matterContainer') matterContainer: ElementRef
 
-  context = new AudioContext()
-  oscillators = {}
-
-  jumpA = -1
-  jumpMS = 500
-  jumpHeight = 1
 
   things: any = {}
-  xSpeed = 0
 
-  cmesh: Mesh
 
   notes = []
   player: any // midi.js player
@@ -99,19 +91,6 @@ export class ShowComponent extends Show implements OnInit {
   ) {
     super()
     this.matterEngine = Engine
-
-  }
-
-
-  jumpNote(note) {
-    console.log('jump')
-    // jump a given note
-    this.animateJump(this.jumpHeight).subscribe((val: number) => {
-      let box = this.notes[note - 20]
-      if (box) {
-        box.position.y = val
-      }
-    })
   }
 
   ngOnInit() {
@@ -139,35 +118,19 @@ export class ShowComponent extends Show implements OnInit {
         return
       }
 
-      // R1: parabola's a
-      if (message.keyName === 'R1') {
-        this.jumpA = (message.decimal * 10) - 5
-      }
-
-      // R2: jump duration
-      if (message.keyName === 'R2') {
-        this.jumpMS = (message.decimal * 2000)
-      }
-
-      // R3: jump height
-      if (message.keyName === 'R3') {
-        this.jumpHeight = (message.decimal * 100)
-      }
 
       /**
        * Keydown:
        *
        * - play sound
-       * - run keydown animation
+       * - animation happens reactively! :)
        */
       if (message.name === 'keydown') {
         // play sound
         MIDI.noteOn(0, message.key, message.velocity * 127, 0)
-        this.keydownFunction(message)
       }
-
-       // stop playing sound on keyup
       if (message.name === 'keyup') {
+        // stop playing sound
         MIDI.noteOff(0, message.key, message.velocity)
       }
     })
@@ -179,13 +142,16 @@ export class ShowComponent extends Show implements OnInit {
 
     /** BOX MAKING */
 
-    const boxSize = 0.5
-    const boxDistance = boxSize / 10
+    
 
     let colorRange = colors['I. J. Belmont (1944)']
     console.log(colorRange)
 
     for (let i = 0; i < 90; i++) {
+
+      const boxSize = 0.5 + (i / 40)
+      const boxDistance = boxSize / 10
+
       const geo = new BoxGeometry(boxSize, boxSize, boxSize)
       const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215), transparent: true, opacity: 0.1 })
       let index = i + 24
@@ -199,6 +165,9 @@ export class ShowComponent extends Show implements OnInit {
       let midiKey = i + 21 // or lowest box A1 (box zero) is midi key 21
 
       let offsetter = i - 45
+
+      // light
+      light = i / 100
 
       mat.color.setHSL(hue, sat, light)
       const mymesh = new Mesh(geo, mat)
@@ -217,15 +186,22 @@ export class ShowComponent extends Show implements OnInit {
         if (message.key === midiKey && message.name === 'keydown') {
           mymesh.visible = true
           mymesh.material.opacity = 1
+
           // jump, using the state of the knobs
-          let decimal = this.midi.knobs['R1']
-          this.animateJump(10 * decimal).subscribe((val:number) => {
+          let heightDecimal = this.midi.knobs['R1']
+          let durationDecimal = this.midi.knobs['R2']
+          this.animateJump(10 * heightDecimal, durationDecimal * 5000).subscribe((val: number) => {
             mymesh.position.y = val
+          })
+          // also do the scale
+          this.animation.animateEasing('linear', 500).subscribe((decimal: number) => {
+            let scale = (decimal ) + 1
+            mymesh.scale.set(scale, scale, scale)
           })
 
         } else if (message.key === midiKey && message.name === 'keyup') {
           //mymesh.visible = false
-          this.animation.animateEasing('linear', 1000).subscribe((decimal:number) => {
+          this.animation.animateEasing('linear', 1000).subscribe((decimal: number) => {
             mymesh.material.opacity = 1 - decimal + 0.1
           })
         }
@@ -234,27 +210,15 @@ export class ShowComponent extends Show implements OnInit {
 
   }
 
-  /**
-   * Beging replaced by reactive functions on boxes
-   *
-   * @param message
-   */
-  keydownFunction(message) {
-    // which box is it? (one octave from 88 keyboard )
-    let note = this.notes[message.key - 32 + 13]
-
-    // animate the box in question
-    this.animateJump(this.jumpHeight * message.velocity).subscribe((decimal: number) => {
-      //note.position.y = decimal
-    })
-  }
 
   /** HELPERS */
 
-  /** a parabola, starting at 0 */
+  /** a parabola, starting at 0 
+   * consider having an 'a' argument
+  */
   jumpPosition = (height, percent) => {
     // a defines the steepness of the parabola
-    let a = this.jumpA
+    let a = -1
 
     let xOffset = Math.sqrt(height) * a
     let totalX = xOffset * -2
@@ -265,12 +229,10 @@ export class ShowComponent extends Show implements OnInit {
   }
 
   // not pure! :)
-
-  animateJump(height) {
+  animateJump(height, durationMS) {
 
     return new Observable(stream => {
-      let durationMS = 500 // Math.sqrt(height) * 300 // say 2 becomes 400
-      durationMS = this.jumpMS
+      // consider basing duration of offset, e.g. how steep.
       let start = new Date().getTime()
       let end = start + durationMS
       let step = () => {
