@@ -2,10 +2,14 @@ import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core'
 
 
 import { Show } from '../show'
-import { MIDIService } from '../midi.service'
+import { MIDIService, MIDIMessage } from '../midi.service'
+
+
 import { AnimationService } from '../animation.service'
 
 import { Observable } from 'rxjs/Observable'
+
+
 
 import {
   Engine,
@@ -128,7 +132,7 @@ export class ShowComponent extends Show implements OnInit {
      * - knob turns
      * - and key presses
      */
-    this.midi.stream.subscribe(message => {
+    this.midi.stream.subscribe((message: MIDIMessage) => {
 
       if (!message) {
         console.log('no message passed')
@@ -183,7 +187,7 @@ export class ShowComponent extends Show implements OnInit {
 
     for (let i = 0; i < 90; i++) {
       const geo = new BoxGeometry(boxSize, boxSize, boxSize)
-      const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215) })
+      const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215), transparent: true, opacity: 0.1 })
       let index = i + 24
       let colorIndex = index % 12
       let color = colorRange[colorIndex]
@@ -191,26 +195,57 @@ export class ShowComponent extends Show implements OnInit {
       let sat = color[1] / 100
       let light = color[2] / 100
 
+      // which midi key are we?
+      let midiKey = i + 21 // or lowest box A1 (box zero) is midi key 21
+
       let offsetter = i - 45
 
       mat.color.setHSL(hue, sat, light)
       const mymesh = new Mesh(geo, mat)
       mymesh.castShadow = true
-      mymesh.position.z = 0 
+      mymesh.position.z = 0
+      mymesh.visible = true
       mymesh.position.x = (offsetter * boxSize) + (offsetter * boxDistance)
       this.scene.add(mymesh)
       this.notes.push(mymesh)
+
+      /**
+       * REACTIVE BOXES
+       */
+      // subscribe to key down/up stream
+      this.midi.stream.subscribe(message => {
+        if (message.key === midiKey && message.name === 'keydown') {
+          mymesh.visible = true
+          mymesh.material.opacity = 1
+          // jump, using the state of the knobs
+          let decimal = this.midi.knobs['R1']
+          this.animateJump(10 * decimal).subscribe((val:number) => {
+            mymesh.position.y = val
+          })
+
+        } else if (message.key === midiKey && message.name === 'keyup') {
+          //mymesh.visible = false
+          this.animation.animateEasing('linear', 1000).subscribe((decimal:number) => {
+            mymesh.material.opacity = 1 - decimal + 0.1
+          })
+        }
+      })
     }
 
   }
 
+  /**
+   * Beging replaced by reactive functions on boxes
+   *
+   * @param message
+   */
   keydownFunction(message) {
     // which box is it? (one octave from 88 keyboard )
     let note = this.notes[message.key - 32 + 13]
 
     // animate the box in question
     this.animateJump(this.jumpHeight * message.velocity).subscribe((decimal: number) => {
-      note.position.y = decimal
+      //note.position.y = decimal
     })
   }
 
@@ -228,6 +263,8 @@ export class ShowComponent extends Show implements OnInit {
 
     return (a * (x * x)) + height
   }
+
+  // not pure! :)
 
   animateJump(height) {
 

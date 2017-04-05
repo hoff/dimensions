@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core'
+
+import { Observable } from 'rxjs/Observable'
 
 @Injectable()
 export class AnimationService {
@@ -47,6 +49,7 @@ export class AnimationService {
 
   constructor() { }
 
+  // replace with reactvie version
   animateValue(easing, durationMS, from, to, obj, key, whendone) {
     let start = new Date().getTime()
     let end = start + durationMS
@@ -78,6 +81,39 @@ export class AnimationService {
       }
     }
     step()
+  }
+
+  /** observable easing functions! */
+
+  animateEasing(easing, durationMS) {
+
+    return new Observable(stream => {
+      let start = new Date().getTime()
+      let end = start + durationMS
+
+      let step = () => {
+
+        let now = new Date().getTime()
+        let progress
+
+        if (now > end) {
+          progress = 1
+        } else {
+          progress = (now - start) / durationMS // percent as decimal
+        }
+        // now you know how much progress you've made. use this to calculate position!
+        let easingProgress = this.EasingFunctions[easing](progress)
+        stream.next(easingProgress)
+
+        // call yourself
+        if (progress < 1) {
+          requestAnimationFrame(step)
+        }
+      }
+      step()
+    }).share()
+
+
   }
 
 }

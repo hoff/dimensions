@@ -3,13 +3,18 @@ import { Injectable } from '@angular/core'
 import 'rxjs/Rx'
 import { Observable, Subscribable } from 'rxjs/Observable'
 import { Subscriber } from 'rxjs/Subscriber'
+import { Subject } from 'rxjs/Subject'
 
 
-interface keyboardMessage {
-  keyNumber: number
-  keyName: string
-  /** between 0 and 1 */
-  velocity: number
+export interface MIDIMessage {
+      control: string
+      name: string
+      key: number
+      keyName: string
+      // in case of dials
+      decimal?: number
+      // in case of keys
+      velocity?: number
 }
 
 declare var MIDI: any
@@ -22,8 +27,14 @@ export class MIDIService {
    * Observable and Stream for ALL midi messages
    */
 
-  source: Subscriber<any>
-  stream: Subscribable<any>
+  source: Subscriber<MIDIMessage>
+  stream: Observable<MIDIMessage>
+
+  /**
+   * keyboard state: knobs
+   */
+  knobs = {}
+  toggles = {}
 
   keyNameMap = {
     7: 'master',
@@ -51,6 +62,19 @@ export class MIDIService {
     this.stream = new Observable(source => {
       this.source = source
     }).share()
+
+    /**
+     * set up knobs and defaults
+     */
+    for (let i = 1; i < 9; i ++) {
+      // knobs are default 0.5
+      let knobName = 'R' + i
+      this.knobs[knobName] = 0.5
+
+      // toggles are default OFF
+      let toggleName = 'B' + i
+      this.toggles[toggleName] = false
+    }
 
 
     /**
@@ -124,11 +148,17 @@ export class MIDIService {
     console.log('No access to MIDI devices or your browser does not support WebMIDI API.')
   }
 
+  /** take a message with raw data in data object
+   *
+   * outputs a nicely formatted midi message
+   * updates internal representation
+   */
 
   streamMessage = (message) => {
 
     const [action, key, value] = message.data
-    // console.log('MIDI service received action, key, value: ', message.data)
+
+    console.log('MIDI service received action, key, value: ', message.data)
 
     let msg
     let control
@@ -165,6 +195,9 @@ export class MIDIService {
           keyName: this.keyNameMap[key],
           decimal: value / 127
         }
+        // update local representation
+        this.knobs['R8'] = value / 127
+        console.log(this.knobs['R8'])
         break
     }
 

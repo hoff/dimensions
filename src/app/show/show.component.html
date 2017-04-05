@@ -5,6 +5,9 @@
 <div style="width: 100vw; height: 30vh; background-color:#333; padding: 20px; color: white; overflow: scroll;">
   
   <!--- knobs create and map dynamically -->
+  <div *ngFor="let knob of midi.knobs | mapToIterable">
+    {{ knob.key }} is {{ knob.val }}
+  </div>
 
   
     <span>R1 (jump s): {{ jumpA }}</span>
@@ -17,7 +20,7 @@
 <button (click)="midi.player.start()">play</button>
 <button (click)="midi.player.stop()">stop</button>
 
-<button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">play {{ song.name }}</button>
+<button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
 
 
 <!-- THINGS -->
