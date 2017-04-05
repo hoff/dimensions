@@ -172,7 +172,7 @@ export class ShowComponent extends Show implements OnInit {
     let colorRange = colors['I. J. Belmont (1944)']
     console.log(colorRange)
 
-    for (let i = 0; i < 88; i++) {
+    for (let i = 0; i < 90; i++) {
       const geo = new BoxGeometry(boxSize, boxSize, boxSize)
       const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215) })
       let index = i + 24
