@@ -80,6 +80,15 @@ export class ShowComponent extends Show implements OnInit {
   engine: Engine
   matterRender: Render
 
+  knobMapping = [
+    {
+      name: 'jump height',
+      reaction: (decimal) => {
+        console.log(decimal)
+      }
+    }
+  ]
+
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
@@ -182,12 +191,12 @@ export class ShowComponent extends Show implements OnInit {
       let sat = color[1] / 100
       let light = color[2] / 100
 
-      let offsetter = i - 44
+      let offsetter = i - 45
 
       mat.color.setHSL(hue, sat, light)
       const mymesh = new Mesh(geo, mat)
       mymesh.castShadow = true
-      mymesh.position.z = 0 // (boxSize / 2) + 0.1
+      mymesh.position.z = 0 
       mymesh.position.x = (offsetter * boxSize) + (offsetter * boxDistance)
       this.scene.add(mymesh)
       this.notes.push(mymesh)

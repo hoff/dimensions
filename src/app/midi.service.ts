@@ -32,7 +32,6 @@ export class MIDIService {
     74: 'R3',
     71: 'R4',
     73: 'R5',
-
   }
   player: any // midi.js player
 
