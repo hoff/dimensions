@@ -146,11 +146,11 @@ export class ShowComponent extends Show implements OnInit {
 
     for (let i = 0; i < 90; i++) {
 
-      const boxSize = 0.5 + (i / 40)
+      const boxSize = 0.5 //  + (i / 40)
       const boxDistance = boxSize / 10
 
       const geo = new BoxGeometry(boxSize, boxSize, boxSize)
-      const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215), transparent: true, opacity: 0.1 })
+      const mat = new MeshPhongMaterial({ color: Math.floor(Math.random() * 16777215), transparent: true, opacity: 0.9 })
       let index = i + 24
       let colorIndex = index % 12
       let color = colorRange[colorIndex]
@@ -171,7 +171,16 @@ export class ShowComponent extends Show implements OnInit {
       mymesh.castShadow = true
       mymesh.position.z = 0
       mymesh.visible = true
-      mymesh.position.x = (offsetter * boxSize) + (offsetter * boxDistance)
+
+      // straight line.
+      //mymesh.position.x = (offsetter * boxSize) + (offsetter * boxDistance)
+
+      // helix!
+      let x = Math.cos(i % 12) * 3
+      let y = Math.sin(i % 12) * 3
+      let z = i / 12
+      mymesh.position.set(x, y, z)
+
       this.scene.add(mymesh)
       this.notes.push(mymesh)
 
