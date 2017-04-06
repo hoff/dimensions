@@ -12,10 +12,11 @@ import { ShowComponent } from './show/show.component';
 import { MapToIterablePipe } from './map-to-iterable.pipe';
 import { StringifyPipe } from './stringify.pipe';
 import { DecimalToPercentPipe } from './decimal-to-percent.pipe';
-import { SpaceComponent } from './space/space.component'
+import { SpaceComponent } from './space/space.component';
+import { HomePageComponent } from './home-page/home-page.component'
 
 const appRoutes: Routes = [
-  { path: '', component: ColorPageComponent},
+  { path: '', component: HomePageComponent},
   { path: 'color', component: ColorPageComponent },
   // pages
 ]
@@ -29,6 +30,7 @@ const appRoutes: Routes = [
     StringifyPipe,
     DecimalToPercentPipe,
     SpaceComponent,
+    HomePageComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

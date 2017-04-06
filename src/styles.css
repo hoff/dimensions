@@ -19,6 +19,10 @@ button {
 flex-row {
 	display: flex;
 }
+flex-row-center {
+	display: flex;
+	justify-content: center;
+}
 flex-row-around {
 	display: flex;
 	justify-content: space-around;
@@ -29,6 +33,7 @@ flex-col {
 	flex-direction: column;
 }
 flex-col-center {
+	flex-direction: column;
 	display: flex;
 	align-items: center;
 }
