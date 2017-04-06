@@ -37,22 +37,51 @@ export class MIDIService {
   toggles = {}
 
   keyNameMap = {
-    7: 'master',
+    7: 'Master',
     91: 'R1',
     93: 'R2',
     74: 'R3',
     71: 'R4',
     73: 'R5',
-    
+    75: 'R6',
+    72: 'R7',
+    10: 'R8',
+    1: 'Modululation',
+    // continue
   }
   player: any // midi.js player
 
+  /**
+   * loads then play a given song
+   * @param song
+   */
   public playSong(song) {
     console.log('play', song.name)
     this.player.loadFile(song.data, () => {
       console.log('song loaded')
       this.player.start()
     })
+  }
+
+  /**
+   * Play a sound on the Web-Midi thing
+   *
+   * @param channel The MIDI channel
+   * @param key the MIDI key
+   * @param velocityDecimal the velocity between 0 and 1
+   */
+  soundNote(channel: number, key: number, velocityDecimal) {
+    MIDI.noteOn(0, key, velocityDecimal * 127, 0)
+  }
+
+  /**
+   * Send a 'note-off' signal to our midi js setup
+   * @param channel
+   * @param key
+   * @param velocityDecimal 
+   */
+  stopNote(channel: number, key: number, velocityDecimal) {
+     MIDI.noteOff(0, key, velocityDecimal)
   }
 
   constructor(

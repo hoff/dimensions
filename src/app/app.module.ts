@@ -11,7 +11,8 @@ import { ColorPageComponent } from './color-page/color-page.component';
 import { ShowComponent } from './show/show.component';
 import { MapToIterablePipe } from './map-to-iterable.pipe';
 import { StringifyPipe } from './stringify.pipe';
-import { DecimalToPercentPipe } from './decimal-to-percent.pipe'
+import { DecimalToPercentPipe } from './decimal-to-percent.pipe';
+import { SpaceComponent } from './space/space.component'
 
 const appRoutes: Routes = [
   { path: '', component: ColorPageComponent},
@@ -27,6 +28,7 @@ const appRoutes: Routes = [
     MapToIterablePipe,
     StringifyPipe,
     DecimalToPercentPipe,
+    SpaceComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

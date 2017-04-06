@@ -60,8 +60,6 @@ declare var sketch: any
 })
 export class ShowComponent extends Show implements OnInit {
 
-  @Input('show') show // not in use
-
   @ViewChild('sceneContainer') sceneContainer: ElementRef
   @ViewChild('matterContainer') matterContainer: ElementRef
 
@@ -127,11 +125,11 @@ export class ShowComponent extends Show implements OnInit {
        */
       if (message.name === 'keydown') {
         // play sound
-        MIDI.noteOn(0, message.key, message.velocity * 127, 0)
+        this.midi.soundNote(0, message.key, message.velocity)
       }
       if (message.name === 'keyup') {
         // stop playing sound
-        MIDI.noteOff(0, message.key, message.velocity)
+        this.midi.stopNote(0, message.key, message.velocity)
       }
     })
 
