@@ -114,7 +114,7 @@ export class ShowComponent extends Show implements OnInit {
     this.midi.stream.subscribe((message: MIDIMessage) => {
 
       if (!message) {
-        console.log('no message passed')
+        console.log('no message passed!')
         return
       }
 
@@ -142,10 +142,7 @@ export class ShowComponent extends Show implements OnInit {
 
     /** BOX MAKING */
 
-    
-
     let colorRange = colors['I. J. Belmont (1944)']
-    console.log(colorRange)
 
     for (let i = 0; i < 90; i++) {
 
@@ -183,6 +180,12 @@ export class ShowComponent extends Show implements OnInit {
        */
       // subscribe to key down/up stream
       this.midi.stream.subscribe(message => {
+
+
+        /**
+         * reaction to key-down
+         */
+
         if (message.key === midiKey && message.name === 'keydown') {
           mymesh.visible = true
           mymesh.material.opacity = 1
@@ -190,7 +193,7 @@ export class ShowComponent extends Show implements OnInit {
           // jump, using the state of the knobs
           let heightDecimal = this.midi.knobs['R1']
           let durationDecimal = this.midi.knobs['R2']
-          this.animateJump(10 * heightDecimal, durationDecimal * 5000).subscribe((val: number) => {
+          this.animateJump(30 * heightDecimal, durationDecimal * 5000).subscribe((val: number) => {
             mymesh.position.y = val
           })
           // also do the scale
@@ -262,6 +265,8 @@ export class ShowComponent extends Show implements OnInit {
    * Three.js Animation Loop
    */
   animate = () => {
+    this.controls.update()
+
     requestAnimationFrame(this.animate)
     // render
     this.renderer.render(this.scene, this.camera)

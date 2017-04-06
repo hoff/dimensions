@@ -84,14 +84,15 @@ export class Show {
     // controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enabled = true;
+    this.controls.autoRotate = true
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
-    this.controls.autoRotate = true
+    this.controls.autoRotate = false
     
 
     // lights
     this.ambient = new AmbientLight(0xffab12)
-    //this.scene.add(this.ambient)
+    this.scene.add(this.ambient)
 
     this.directional = new DirectionalLight(0xFFFFFF)
     this.directional.position.set(2, 2, 7);
