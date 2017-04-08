@@ -54,6 +54,9 @@ export class SpaceComponent extends Show implements AfterViewInit {
 
   ship: Ship
 
+  // move show vars here!
+  kickIntesity = 1
+
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
@@ -120,6 +123,8 @@ class Ship {
   pushBackFactor = 1
 
   gravityVector = new Vector3(0, -1 / 60, 0)
+  g = 10 // meters per second per second (earth's gravity accelation)
+  gFactor = 1
 
   velocity = new Vector3(0, 0, 0)
 
@@ -133,17 +138,28 @@ class Ship {
     console.log('... and built :)')
 
     this.midi.stream.subscribe(msg => {
+      //console.log(msg)
+
       /* give thrust according to knob */
       if (msg.keyName === 'R1') {
         this.thrust = msg.decimal * 3
         this.thruster.material.opacity = msg.decimal
       } if (msg.keyName === 'R2') {
-        this.pushBackFactor = msg.decimal * 3
-      } if (msg.keyName === 'R3') {
+        // this.pushBackFactor = msg.decimal * 3
+        // this.gFactor = msg.decimal * 10
+      } if (msg.keyName === 'Master') {
+        this.gFactor = msg.decimal
+        //console.log(this.gFactor)
       }
       if (msg.keyName === 'B1') {
-        let kickVector = new Vector3(0.03, 0.3, 0)
-        this.velocity.add(kickVector)
+
+        // kick with delay the higher you are
+        let delay = this.midiNote * 50
+        let kickIntesity = Math.random()
+
+        let kickVector = new Vector3(0, kickIntesity, 0)
+        setTimeout(()=> this.velocity.add(kickVector), delay)
+        // this.velocity.add(kickVector)
       }
       if (msg.keyName === 'B2') {
         let kickVector = new Vector3(-0.04, 0.8, 0)
@@ -155,15 +171,26 @@ class Ship {
       } if (msg.name === 'keydown') {
 
         if (msg.key === this.midiNote) {
+          // reset
           if (this.body.position.y > 0) {
-            // reset
+            
             this.body.position.y = 0
             this.velocity = new Vector3()
           }
 
-          let kickVector = new Vector3(0, msg.velocity, 0)
+          // kick (take show's factor)
+          let kickVector = new Vector3(0, msg.velocity * 1.5, 0)
           this.velocity.add(kickVector)
         }
+      }
+      if (msg.name === 'keydown' && msg.key === this.midiNote) {
+        // play sound
+        this.midi.soundNote(0, msg.key, msg.velocity)
+      }
+      if (msg.name === 'keyup' && msg.key === this.midiNote) {
+        // stop playing sound
+        console.log(msg)
+        this.midi.stopNote(0, msg.key, msg.velocity)
       }
     })
 
@@ -177,15 +204,29 @@ class Ship {
     this.animation.beforeRenderStream.subscribe(() => {
 
       let thrustVector = new Vector3(0, this.thrust / 60, 0)
+      let gravityVector = new Vector3(0, -1/60 * this.gFactor, 0)
 
       // add gravity and thrust vector to velocity vector
-      this.velocity.add(this.gravityVector).add(thrustVector)
+      this.velocity.add(gravityVector).add(thrustVector)
+
+      // check if you going down
+      if (this.velocity.y < 0) {
+        this.body.visible = false
+      } else {
+        this.body.visible = true
+      }
 
       // apply the new velocity vector to create movement
       this.body.position.add(this.velocity)
 
       // make sure you don't go into the ground
       if (this.body.position.y < 0) {
+        // console.log(this.body.position.y)
+        // for now, just simply set yourself to 0y
+        //this.body.position.y = 0
+        // cancel out velocity?
+        this.velocity.y = 0
+        this.body.position.y = 0
 
         // push back
         let deepnessFactor = (this.body.position.y * -1)
@@ -196,8 +237,8 @@ class Ship {
           0
         )
 
-        pushBack.sub(this.gravityVector)
-        this.velocity.add(pushBack)
+        //pushBack.sub(this.gravityVector)
+        // this.velocity.add(pushBack)
         //console.log('pushback', pushBack.y, this.velocity.y)
       }
 
@@ -208,21 +249,25 @@ class Ship {
   }
 
   build() {
-    let coreGeo = new BoxGeometry(1, 1, 1)
-    let coreMat = new MeshPhongMaterial({ color: 0xffdd33 })
+    let coreGeo = new BoxGeometry(10, 10, 10)
+    let coreMat = new MeshPhongMaterial({ color: this.randomColor() })
     let core = new Mesh(coreGeo, coreMat)
 
-    let thrustGeo = new BoxGeometry(1, 1, 1)
+    let thrustGeo = new BoxGeometry(10, 10, 10)
     let thrustMat = new MeshPhongMaterial(
       { color: 0xff0000, transparent: true, opacity: this.thrust }
     )
     let thrust = new Mesh(thrustGeo, thrustMat)
-    thrust.position.y = -1
+    thrust.position.y = -10
 
     this.body.add(core)
     this.body.add(thrust)
     this.thruster = thrust
 
+  }
+
+  randomColor() {
+    return Math.floor(Math.random() * 16777215)
   }
 
 }

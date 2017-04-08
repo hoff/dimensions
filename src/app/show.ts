@@ -136,7 +136,7 @@ export class Show {
     const helper = new DirectionalLightHelper(this.directional);
     const camHelper = new CameraHelper(this.directional.shadow.camera);
 
-    this.scene.add(helper)
-    this.scene.add(camHelper)
+    // this.scene.add(helper)
+    //this.scene.add(camHelper)
   }
 }
