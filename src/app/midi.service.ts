@@ -46,6 +46,15 @@ export class MIDIService {
     75: 'R6',
     72: 'R7',
     10: 'R8',
+    // toggles
+    97: 'B1',
+    96: 'B2',
+    66: 'B3',
+    67: 'B4',
+    64: 'B5',
+    65: 'B6',
+    // same as master, 7:  'B7',
+    // same as R8, 10: 'B8',
     1: 'Modululation',
     // continue
   }

@@ -63,12 +63,9 @@ export class ShowComponent extends Show implements OnInit {
   @ViewChild('sceneContainer') sceneContainer: ElementRef
   @ViewChild('matterContainer') matterContainer: ElementRef
 
-
   things: any = {}
 
-
   notes = []
-  player: any // midi.js player
 
   matterEngine: any
   engine: Engine

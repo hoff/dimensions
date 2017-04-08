@@ -4,8 +4,8 @@ space here
 <button (click)="applyForce(-1, 1)">-1 newton (left)</button>
 
 <button (click)="applyForce(1, 1)">apply one newton for 1 second</button>-->
-
-y speed: {{ ship?.velocity?.y | decimalToPercent  }}
+y position: {{ ship?.body.position.y }}
+y speed: {{ ship?.velocity?.y   }}
 push factor {{ ship?.pushBackFactor | decimalToPercent }}
 
 <div 
@@ -15,5 +15,33 @@ push factor {{ ship?.pushBackFactor | decimalToPercent }}
   [style.background]="'lime'"
 >
   <!-- three.js renders here -->
+</div>
+
+<div style="width: 100vw; height: 30vh; border-top: 1px solid #333; background-color:#111; padding: 20px; color: #ddd; overflow: scroll;">
+  
+  <!--- sliders -->
+
+  <!--- knobs  -->
+  <flex-row-around>
+<flex-col>{{ midi.knobs['R1'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R2'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R3'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R4'] | decimalToPercent }}% </flex-col>
+
+<flex-col>{{ midi.knobs['R5'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R6'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R7'] | decimalToPercent }}% </flex-col>
+<flex-col>{{ midi.knobs['R8'] | decimalToPercent }}% </flex-col>
+  </flex-row-around>
+
+
+<!-- SONG PLAYING -->
+<div style="height: 40px;"></div>
+
+<button (click)="midi.player.start()">play</button>
+<button (click)="midi.player.stop()">stop</button>
+
+<button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
+
 </div>
 

@@ -59,7 +59,7 @@ export class SpaceComponent extends Show implements AfterViewInit {
     public animation: AnimationService,
   ) {
     // inherit goodies from Show
-     super()
+    super()
   }
 
   ngAfterViewInit() {
@@ -68,9 +68,17 @@ export class SpaceComponent extends Show implements AfterViewInit {
      */
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
 
-    this.ship = new Ship(this.midi, this.animation)
-    this.ship.body.position.y = 5
-    this.scene.add(this.ship.body)
+    let myKeyCount = 49
+    let toTheLeft = 15
+    let toTheRight = 12
+    let totalKeyCount = myKeyCount + toTheLeft + toTheRight
+
+    for (let i = 0; i < totalKeyCount; i++) {
+      let midiNote = i + 20
+      let ship = new Ship(this.midi, this.animation, midiNote)
+      ship.body.position.x = (i - totalKeyCount / 2) * 1
+      this.scene.add(ship.body)
+    }
 
     this.animate()
   }
@@ -81,7 +89,7 @@ export class SpaceComponent extends Show implements AfterViewInit {
 
     // push a message down the before render stream
     this.animation.beforeRenderSource.next('rendering coming up')
-    
+
 
     requestAnimationFrame(this.animate)
 
@@ -89,15 +97,6 @@ export class SpaceComponent extends Show implements AfterViewInit {
     this.renderer.render(this.scene, this.camera)
   }
 
-  applyForce(newton: number, seconds: number) {
-    // how much mass does the object have?
-    let massKG = 1
-    // 1 second cancels out.
-    // how many meters per second?
-    let mps = (newton / massKG) * seconds
-    //this.ship.userData.mps += mps
-  }
-  
 
   toRadians(angle: number) {
     return angle * (Math.PI / 180);
@@ -118,15 +117,16 @@ class Ship {
   body = new Object3D()
   thruster: Mesh
   thrust = 0
-  pushBackFactor = 0.2
+  pushBackFactor = 1
 
   gravityVector = new Vector3(0, -1 / 60, 0)
-  
+
   velocity = new Vector3(0, 0, 0)
 
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
+    public midiNote: number,
   ) {
     console.log('Ship constructed.')
     this.build()
@@ -141,7 +141,29 @@ class Ship {
         this.pushBackFactor = msg.decimal * 3
       } if (msg.keyName === 'R3') {
       }
-      if (msg.keyName === 'R4') {
+      if (msg.keyName === 'B1') {
+        let kickVector = new Vector3(0.03, 0.3, 0)
+        this.velocity.add(kickVector)
+      }
+      if (msg.keyName === 'B2') {
+        let kickVector = new Vector3(-0.04, 0.8, 0)
+        this.velocity.add(kickVector)
+      }
+      if (msg.keyName === 'B3') {
+        let kickVector = new Vector3(0, 1.5, 0)
+        this.velocity.add(kickVector)
+      } if (msg.name === 'keydown') {
+
+        if (msg.key === this.midiNote) {
+          if (this.body.position.y > 0) {
+            // reset
+            this.body.position.y = 0
+            this.velocity = new Vector3()
+          }
+
+          let kickVector = new Vector3(0, msg.velocity, 0)
+          this.velocity.add(kickVector)
+        }
       }
     })
 
@@ -154,13 +176,7 @@ class Ship {
      */
     this.animation.beforeRenderStream.subscribe(() => {
 
-      // apply gravity - review vector
-      //let gravityVector = new Vector3(0, -1 / 60, 0)
-
-      // make and apply a thrust vector
-      // how many newtons of thrust have I been receiving in the last 1/60 seconds?
-      // which direction am I pointing (up for now)
-      let thrustVector = new Vector3(0, this.thrust / 60, 0 )
+      let thrustVector = new Vector3(0, this.thrust / 60, 0)
 
       // add gravity and thrust vector to velocity vector
       this.velocity.add(this.gravityVector).add(thrustVector)
@@ -172,16 +188,17 @@ class Ship {
       if (this.body.position.y < 0) {
 
         // push back
+        let deepnessFactor = (this.body.position.y * -1)
         // push back should also be informed by how deep I'm in the shits
         let pushBack = new Vector3(
-          0, 
-          (this.velocity.y * -1) * this.pushBackFactor,
+          0,
+          (this.velocity.y * -1), // * this.pushBackFactor + deepnessFactor,
           0
         )
-        
+
         pushBack.sub(this.gravityVector)
         this.velocity.add(pushBack)
-        console.log('pushback', pushBack.y, this.velocity.y)
+        //console.log('pushback', pushBack.y, this.velocity.y)
       }
 
       /*this.body.rotateX(0.001)
@@ -192,12 +209,12 @@ class Ship {
 
   build() {
     let coreGeo = new BoxGeometry(1, 1, 1)
-    let coreMat = new MeshPhongMaterial({color: 0xffdd33})
+    let coreMat = new MeshPhongMaterial({ color: 0xffdd33 })
     let core = new Mesh(coreGeo, coreMat)
 
     let thrustGeo = new BoxGeometry(1, 1, 1)
     let thrustMat = new MeshPhongMaterial(
-      {color: 0xff0000, transparent: true, opacity: this.thrust}
+      { color: 0xff0000, transparent: true, opacity: this.thrust }
     )
     let thrust = new Mesh(thrustGeo, thrustMat)
     thrust.position.y = -1
@@ -208,29 +225,4 @@ class Ship {
 
   }
 
-  /**
-   * changes the velocity vector, given a direction and force
-   * which comes split as two (newton and seconds of application)
-   * 
-   * example 1: to give a push from below, the vector is 0,1,0
-   * where the size of the vector is a result of the force (which results from newtons and seconds)
-   * 
-   * how add this vector
-   * 
-   * @param newton 
-   * @param seconds 
-   * @param direction 
-   */
-  applyForce(newton: number, seconds: number, direction: Vector3) {
-    // how much mass does the object have?
-    let massKG = 1
-    // 1 second cancels out.
-
-    // how many meters per second?
-    // this is the resulting vector (in this case, just x)
-    let mps = (newton / massKG) * seconds
-
-    let newVelocity = this.velocity.add(direction)
-  }
-  
 }
