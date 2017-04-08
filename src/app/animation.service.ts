@@ -1,9 +1,13 @@
 import { Injectable } from '@angular/core'
 
 import { Observable } from 'rxjs/Observable'
+import { Subscriber } from 'rxjs/Subscriber'
 
 @Injectable()
 export class AnimationService {
+
+  beforeRenderSource: Subscriber<any>
+  beforeRenderStream: Observable<any>
 
 
   EasingFunctions = {
@@ -47,7 +51,11 @@ export class AnimationService {
 
   }
 
-  constructor() { }
+  constructor() { 
+    this.beforeRenderStream = new Observable(source => {
+      this.beforeRenderSource = source
+    }).share()
+  }
 
   // replace with reactvie version
   animateValue(easing, durationMS, from, to, obj, key, whendone) {

@@ -99,10 +99,6 @@ export class ShowComponent extends Show implements OnInit {
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
 
 
-    // setup the renderer inside the container
-    this.sceneContainer.nativeElement.appendChild(this.renderer.domElement)
-
-
     /**
      * Reacting to MIDI events
      *
@@ -264,7 +260,7 @@ export class ShowComponent extends Show implements OnInit {
   }
 
 
-  toRadians(angle) {
+  toRadians(angle: number) {
     return angle * (Math.PI / 180);
   }
 

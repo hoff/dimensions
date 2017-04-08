@@ -64,9 +64,11 @@ export class Show {
   spot: SpotLight
 
   constructor() {
+    console.log('show constructed')
   }
 
   setupShow(midi: MIDIService, element) {
+    console.log('show setup with', midi)
     this.midi = midi
     this.el = element
     this.scene = new Scene()
@@ -76,6 +78,8 @@ export class Show {
     this.renderer.shadowMapType = PCFSoftShadowMap
     this.renderer.setSize(this.el.scrollWidth, this.el.scrollHeight)
     this.renderer.shadowMap.enabled = true;
+
+    element.appendChild(this.renderer.domElement)
 
     this.camera = new PerspectiveCamera(75, this.el.scrollWidth / this.el.scrollHeight, 1, 10000)
     this.camera.position.z = 5
@@ -132,7 +136,7 @@ export class Show {
     const helper = new DirectionalLightHelper(this.directional);
     const camHelper = new CameraHelper(this.directional.shadow.camera);
 
-    //this.scene.add(helper)
-    //this.scene.add(camHelper)
+    this.scene.add(helper)
+    this.scene.add(camHelper)
   }
 }
