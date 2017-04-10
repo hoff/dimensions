@@ -13,7 +13,8 @@ import { MapToIterablePipe } from './map-to-iterable.pipe';
 import { StringifyPipe } from './stringify.pipe';
 import { DecimalToPercentPipe } from './decimal-to-percent.pipe';
 import { SpaceComponent } from './space/space.component';
-import { HomePageComponent } from './home-page/home-page.component'
+import { HomePageComponent } from './home-page/home-page.component';
+import { EntertainerComponent } from './entertainer/entertainer.component'
 
 const appRoutes: Routes = [
   { path: '', component: HomePageComponent},
@@ -31,6 +32,7 @@ const appRoutes: Routes = [
     DecimalToPercentPipe,
     SpaceComponent,
     HomePageComponent,
+    EntertainerComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

@@ -158,7 +158,7 @@ class Ship {
         let kickIntesity = Math.random()
 
         let kickVector = new Vector3(0, kickIntesity, 0)
-        setTimeout(()=> this.velocity.add(kickVector), delay)
+        setTimeout(() => this.velocity.add(kickVector), delay)
         // this.velocity.add(kickVector)
       }
       if (msg.keyName === 'B2') {

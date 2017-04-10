@@ -92,6 +92,7 @@ export class Show {
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
     this.controls.autoRotate = false
+    this.controls.noZoom = false
     
 
     // lights

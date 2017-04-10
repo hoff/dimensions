@@ -52,9 +52,12 @@ export class AnimationService {
   }
 
   constructor() { 
-    this.beforeRenderStream = new Observable(source => {
+    this.beforeRenderStream = new Observable(source => {
       this.beforeRenderSource = source
     }).share()
+    console.log('animation service constructed', this.beforeRenderSource)
+    // if nobody subscribe, the above does not work
+    this.beforeRenderStream.subscribe()
   }
 
   // replace with reactvie version

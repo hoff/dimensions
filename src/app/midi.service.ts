@@ -102,6 +102,7 @@ export class MIDIService {
     this.stream = new Observable(source => {
       this.source = source
     }).share()
+    this.stream.subscribe()
 
     /**
      * set up knobs and defaults
@@ -198,7 +199,7 @@ export class MIDIService {
 
     const [action, key, value] = message.data
 
-    console.log('MIDI service received action, key, value: ', message.data)
+    // console.log('MIDI service received action, key, value: ', message.data)
 
     let msg
     let control
