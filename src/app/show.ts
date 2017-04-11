@@ -99,7 +99,7 @@ export class Show {
     this.ambient = new AmbientLight(0xffab12)
     this.scene.add(this.ambient)
 
-    this.directional = new DirectionalLight(0xFFFFFF)
+    this.directional = new DirectionalLight(0xFFFFFF, 0.5)
     this.directional.position.set(2, 2, 7);
     this.directional.target.position.set(0, 0, 0);
     this.directional.castShadow = true;

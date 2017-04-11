@@ -5,6 +5,8 @@ import { MIDIService, MIDIMessage } from '../midi.service'
 import { AnimationService } from '../animation.service'
 
 import { Observable } from 'rxjs/Observable'
+import { Subscription } from 'rxjs/Subscription'
+
 
 import * as THREE from 'three'
 
@@ -29,6 +31,9 @@ export class EntertainerComponent extends Show implements OnInit, AfterViewInit 
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
 
+  gravityMPS2 = 10
+  gravityFactor = 1
+
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
@@ -46,6 +51,7 @@ export class EntertainerComponent extends Show implements OnInit, AfterViewInit 
 
   ngAfterViewInit() {
     this.setupShow(this.midi, this.sceneContainer.nativeElement)
+    this.scene.background = new THREE.Color( 0xffffff )
 
     this.camera.position.set(0, 15, 25)
 
@@ -57,9 +63,10 @@ export class EntertainerComponent extends Show implements OnInit, AfterViewInit 
     for (let i = 0; i < totalKeyCount; i++) {
       let midiKey = i + 20
 
-      let x = i - (totalKeyCount / 2) * 1 // meter width
-      let note = new Note(midiKey, this.randomColor(), this.midi, this.animation, this.scene, x)
-      this.scene.add(note.base)
+      let x = (i - (totalKeyCount / 2)) * 4 // meter width
+      let y = (i - (totalKeyCount / 2)) * 0.2
+      let note = new Note(midiKey, this.randomColor(), this.midi, this.animation, this.scene, x, y)
+      //this.scene.add(note.base)
     }
 
     this.animate()
@@ -96,23 +103,24 @@ class Note {
     public animation: AnimationService,
     public scene: THREE.Scene,
     public x: number,
-    ) {
+    public y: number,
+  ) {
 
-      // make yourself a base!
+    // make yourself a base!
     this.base = this.construct()
     this.base.position.x = x
 
 
     this.midi.stream.filter(msg => msg.key === this.midiKey && msg.name === 'keydown')
-    .subscribe(msg => {
-      this.onKeyDown(msg)
-    })
+      .subscribe(msg => {
+        this.onKeyDown(msg)
+      })
 
     this.midi.stream.filter(msg => msg.key === this.midiKey && msg.name === 'keyup')
-    .subscribe(msg => {
-      this.onKeyUp(msg)
-    })
-   
+      .subscribe(msg => {
+        this.onKeyUp(msg)
+      })
+
   }
 
   onKeyDown(msg: MIDIMessage) {
@@ -128,10 +136,10 @@ class Note {
    * create a new vessel, x-position it
    */
   fire(velocity: number) {
-    let vessel = new Vessle(this.midi, this.animation, this.midiKey, this.color)
+    let vessel = new Vessle(this.scene, this.midi, this.animation, this.midiKey, this.color)
     vessel.mesh.position.x = this.x
-    //vessel.mesh.scale.set(2, 2, 2)
-    vessel.velocity.add(new THREE.Vector3(0, velocity , 0))
+    vessel.mesh.position.y = this.y
+    vessel.fire(velocity * 3)
     this.scene.add(vessel.mesh)
   }
 
@@ -145,18 +153,21 @@ class Note {
 
 class Vessle {
 
+  animationSubscription: Subscription
   mesh: THREE.Mesh
+  initialVelocity: number
   velocity = new THREE.Vector3()
 
 
   constructor(
-    public midi: MIDIService, 
+    public scene: THREE.Scene,
+    public midi: MIDIService,
     public aniation: AnimationService,
     public key: number,
     public color: number,
   ) {
-    let baseGeo = new THREE.BoxGeometry(1, 1, 1)
-    let baseMat = new THREE.MeshPhongMaterial({ color: this.color })
+    let baseGeo = new THREE.BoxGeometry(5, 5, 5)
+    let baseMat = new THREE.MeshPhongMaterial({ color: this.color, transparent: true })
     this.mesh = new THREE.Mesh(baseGeo, baseMat)
 
     /**
@@ -164,22 +175,41 @@ class Vessle {
      * e.g. start fading
      */
     this.midi.stream.filter(msg => msg.key === this.key && msg.name === 'keyup').take(1).subscribe(msg => {
-      //this.mesh.position.y = 4
+
+      this.mesh.material.opacity = 0.1
     })
 
     /**
      * before each rendering, update you position 
      * by applying all forces acting on the vessle
      */
-    this.aniation.beforeRenderStream.subscribe(() => {
+    this.animationSubscription = this.aniation.beforeRenderStream.subscribe(() => {
 
       // apply gravity
       let gravityVector = new THREE.Vector3(0, -1 / 60 * 1, 0)
       this.velocity.add(gravityVector)
 
+      let range = this.initialVelocity * 2
+      let progress = this.velocity.y 
+      let decimal = progress / range
+      console.log(decimal)
+
+      this.mesh.material.opacity = decimal + 0.5
+
       // re-position yourself
       this.mesh.position.add(this.velocity)
+
+      // if you're out of view, remove yourself from scene and render loop
+      if (this.mesh.position.y < -20) {
+        this.scene.remove(this.mesh)
+        this.animationSubscription.unsubscribe()
+      }
     })
+  }
+
+  fire(velocity: number) {
+    this.initialVelocity = velocity
+    this.velocity.add(new THREE.Vector3(0, velocity, -1))
   }
 
 }
