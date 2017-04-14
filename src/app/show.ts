@@ -82,6 +82,7 @@ export class Show {
     element.appendChild(this.renderer.domElement)
 
     this.camera = new PerspectiveCamera(75, this.el.scrollWidth / this.el.scrollHeight, 1, 10000)
+    //this.camera = new OrthographicCamera(100, 100, 100, 100)
     this.camera.position.z = 5
     
 
