@@ -14,10 +14,12 @@ import { StringifyPipe } from './stringify.pipe';
 import { DecimalToPercentPipe } from './decimal-to-percent.pipe';
 import { SpaceComponent } from './space/space.component';
 import { HomePageComponent } from './home-page/home-page.component';
-import { EntertainerComponent } from './entertainer/entertainer.component'
+import { EntertainerComponent } from './entertainer/entertainer.component';
+import { FlatPageComponent } from './flat-page/flat-page.component'
 
 const appRoutes: Routes = [
   { path: '', component: HomePageComponent},
+  { path: 'flat', component: FlatPageComponent},
   { path: 'color', component: ColorPageComponent },
   // pages
 ]
@@ -33,6 +35,7 @@ const appRoutes: Routes = [
     SpaceComponent,
     HomePageComponent,
     EntertainerComponent,
+    FlatPageComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

@@ -1,0 +1,41 @@
+<h1> hello notes</h1>
+
+Color maker! {{ chords() | stringify }}
+
+<flex-row>
+  <flex-col *ngFor="let chord of chords()">
+    <flex-col style="margin: 20px; overflow:hidden;">
+      <flex-row [style.background-color]="hslaString(chord.self)" style="width: 200px; height: 100px;"><b>{{ chord.self }}</b><br> h: {{ nextHSLAs[chord.self].h }}, s: {{ nextHSLAs[chord.self].s }}, l: {{ nextHSLAs[chord.self].l }} </flex-row>
+      <flex-row [style.background-color]="hslaString(chord.third)" style="width: 200px; height: 100px;">{{ chord.third }}<br> h: {{ nextHSLAs[chord.third].h }}, s: {{ nextHSLAs[chord.third].s }}, l: {{ nextHSLAs[chord.third].l }}  </flex-row>
+      <flex-row [style.background-color]="hslaString(chord.fifth)" style="width: 200px; height: 100px;">{{ chord.fifth }}<br> h: {{ nextHSLAs[chord.fifth].h }}, s: {{ nextHSLAs[chord.fifth].s }}, l: {{ nextHSLAs[chord.fifth].l }} </flex-row>
+    </flex-col>
+  </flex-col>
+</flex-row>
+
+
+
+<div *ngFor="let note of noteNames">
+  {{ note }}
+  <input type="range" [(ngModel)]="nextHSLAs[note].h" min="-1" max="1" step="0.01" />
+  <input type="range" [(ngModel)]="nextHSLAs[note].s" min="-1" max="1" step="0.01" />
+  <input type="range" [(ngModel)]="nextHSLAs[note].l" min="-1" max="1" step="0.01" />
+</div>
+
+
+<flex-row>
+
+  <flex-col *ngFor="let note of baseKeyboard.notes" (click)="fakeKeypress($event, note)" [style.background-color]="note.iAmSelf ? hslaString(note.name) : 'transparent'"
+    style="border: 1px solid black;">
+    <h1>{{ note.name}}</h1>
+    {{ note.octave }} {{ note.midiKey }}
+
+    <div [style.background-color]="note.iAmSelf ? hslaString(note.name) : 'transparent'">self</div>
+    <div [style.background-color]="note.iAmThird ? hslaString(note.name): 'transparent'">third from played</div>
+    <div [style.background-color]="note.iAmFifth ? hslaString(note.name): 'transparent'">fifth from played</div>
+
+    <div [style.background-color]="note.isMyThird ? hslaString(note.name): 'transparent'">is my thrid</div>
+    <div [style.background-color]="note.isMyFifth ? hslaString(note.name): 'transparent'">is my fifth</div>
+
+  </flex-col>
+
+</flex-row>
