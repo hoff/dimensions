@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core'
 import { DomSanitizer, SafeStyle, SafeResourceUrl, SafeUrl } from '@angular/platform-browser'
 
+import * as THREE from 'three'
 
 import { MIDIService } from '../midi.service'
 
@@ -306,12 +307,40 @@ class Note {
 
     })
 
+    /** UP: unhighlight! */
+
     this.midi.stream.filter(msg => msg.name === 'keyup').subscribe(msg => {
-      this.iAmSelf = false
-      this.iAmFifth = false
-      this.iAmThird = false
-      this.isMyThird = false
-      this.isMyFifth = false
+      let msgMod = msg.key % 12
+      let myMod = this.midiKey % 12
+
+      /** Hightlight notes that are contained in the played note */
+
+      // octave from played, or self
+      if (myMod === msgMod) {
+        this.iAmSelf = false
+      }
+
+      // third of played
+      if ((myMod > msgMod && msgMod === myMod - 4) || (myMod < msgMod && msgMod === myMod + 8)) {
+        this.iAmThird = false
+      }
+
+      // fifth of played
+      if ((myMod > msgMod && msgMod === myMod - 7) || (myMod < msgMod && msgMod === myMod + 5)) {
+        this.iAmFifth = false
+      }
+
+      /** Highlight notes that as chords contain the played note */
+
+      // MY third
+      if ((myMod < msgMod && msgMod - 4 === myMod) || (myMod > msgMod && msgMod + 8 === myMod)) {
+        this.isMyThird = false
+      }
+
+      // MY fifth
+      if ((myMod < msgMod && msgMod - 7 === myMod) || (myMod > msgMod && msgMod + 5 === myMod)) {
+        this.isMyFifth = false
+      }
     })
   }
 

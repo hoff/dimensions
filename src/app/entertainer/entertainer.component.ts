@@ -294,6 +294,7 @@ class Note {
     let color: any = this.show.colorsRGB[this.midiKey % 8]
     let baseMat = new THREE.MeshPhongMaterial({ color: this.color })
     baseMat.color.setRGB(color[0] / 255, color[1] / 255, color[2] / 255)
+    //baseMat.color.setHSL()
     return new THREE.Mesh(baseGeo, baseMat)
   }
 

@@ -22,10 +22,10 @@ Color maker! {{ chords() | stringify }}
 </div>
 
 
-<flex-row>
+<flex-row style="background-color: #333;">
 
   <flex-col *ngFor="let note of baseKeyboard.notes" (click)="fakeKeypress($event, note)" [style.background-color]="note.iAmSelf ? hslaString(note.name) : 'transparent'"
-    style="border: 1px solid black;">
+    style="border: 1px solid black; ">
     <h1>{{ note.name}}</h1>
     {{ note.octave }} {{ note.midiKey }}
 
