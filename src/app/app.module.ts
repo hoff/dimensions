@@ -15,10 +15,14 @@ import { DecimalToPercentPipe } from './decimal-to-percent.pipe';
 import { SpaceComponent } from './space/space.component';
 import { HomePageComponent } from './home-page/home-page.component';
 import { EntertainerComponent } from './entertainer/entertainer.component';
-import { FlatPageComponent } from './flat-page/flat-page.component'
+import { FlatPageComponent } from './flat-page/flat-page.component';
+import { SliderComponent } from './slider/slider.component';
+import { ToggleComponent } from './toggle/toggle.component';
+import { PianoComponent } from './piano/piano.component'
 
 const appRoutes: Routes = [
   { path: '', component: HomePageComponent},
+  { path: 'piano', component: PianoComponent},
   { path: 'flat', component: FlatPageComponent},
   { path: 'color', component: ColorPageComponent },
   // pages
@@ -36,6 +40,9 @@ const appRoutes: Routes = [
     HomePageComponent,
     EntertainerComponent,
     FlatPageComponent,
+    SliderComponent,
+    ToggleComponent,
+    PianoComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

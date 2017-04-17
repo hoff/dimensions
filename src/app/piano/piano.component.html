@@ -1,0 +1,18 @@
+<div #sceneContainer style="width: 100vw; height: 70vh;"></div>
+<div style="width: 100vw; height: 30vh;">
+
+  <button (click)="midi.player.start()">play</button>
+<button (click)="midi.player.stop()">stop</button>
+
+<button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
+
+
+  {{ camera?.fov }}
+  <app-slider *ngIf="camera" [from]="0" [to]="360" [val]="camera.fov"
+  (onChange)="camera.fov = $event; camera.updateProjectionMatrix()"></app-slider>
+
+  fps: {{ fps }} warnings:
+  <div *ngFor="let warning of warnings">
+    {{ warning }}
+  </div>
+</div>
