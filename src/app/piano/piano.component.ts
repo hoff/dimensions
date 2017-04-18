@@ -152,6 +152,26 @@ export class PianoComponent implements AfterViewInit {
         }
       }
     })
+    this.midi.stream.filter(msg => msg.keyName === 'B4').subscribe(msg => {
+      this.dimensions = {
+        gravity: 0.0,
+        kick: 0,
+        box: {
+          width: 5,
+          height: 4,
+          depth: 2.4,
+          rotationX: 0.01,
+          rotationY: 0.00,
+          rotationZ: 0.00,
+          fadeSpeed: 0.001,
+        },
+        lights: {
+          directional: {
+            intensity: 0.8,
+          }
+        }
+      }
+    })
   }
 
   sceneSetup() {
@@ -179,7 +199,8 @@ export class PianoComponent implements AfterViewInit {
     this.controls.autoRotate = true
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
-    this.controls.autoRotate = false
+    this.controls.autoRotateSpeed = 0.5
+    //this.controls.autoRotate = false
 
 
     // lights
@@ -437,6 +458,10 @@ class Note {
         let position = new THREE.Vector3()
         position.setFromMatrixPosition(this.baseMesh.matrixWorld)
         vessel.vesselMesh.position.x = position.x
+        let scaleX = 1 - (this.position / 88)
+        let scaleY = (this.position / 88)
+        let scale = 1
+        vessel.vesselMesh.scale.set(scaleX, scaleY, scale)
 
 
 
