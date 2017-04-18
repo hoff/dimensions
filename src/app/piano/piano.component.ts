@@ -37,19 +37,121 @@ export class PianoComponent implements AfterViewInit {
   fps: number
   warnings = []
 
+  dimensions = {
+    gravity: 0.8,
+    kick: 1.5,
+    box: {
+      width: 1,
+      height: 2,
+      depth: 2,
+      rotationX: 0.05,
+      rotationY: 0.01,
+      rotationZ: 0.01,
+      fadeSpeed: 0.03,
+    },
+    lights: {
+      directional: {
+        intensity: 1,
+      }
+    }
+  }
+
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
   ) { }
+
+  requestFullscreen() {
+    let doc = document.getElementById('sceneContainer')
+    doc.webkitRequestFullScreen()
+  }
 
   ngAfterViewInit() {
     /** set up the scene */
     this.sceneSetup()
     /** make keyboard */
     this.keyboard = new Keyboard(this.scene, 'piano', 88)
-    this.keyboard.setup(this.midi)
+    this.keyboard.setup(this.midi, this.animation)
+    this.keyboard.keyboardObject.visible = false
+
+    /** subscribe to knobs for camera */
+    this.bindCamera()
+
     /** kick off animation loop */
     this.animate()
+  }
+
+  bindCamera() {
+    this.midi.stream.filter(msg => msg.keyName === 'R1').subscribe(msg => {
+      this.camera.position.x = (msg.decimal * 200) - 100
+    })
+    this.midi.stream.filter(msg => msg.keyName === 'R2').subscribe(msg => {
+      this.camera.position.y = (msg.decimal * 200) - 100
+    })
+    this.midi.stream.filter(msg => msg.keyName === 'R3').subscribe(msg => {
+      this.camera.position.z = (msg.decimal * 200) - 100
+    })
+    // load preset
+    this.midi.stream.filter(msg => msg.keyName === 'B1').subscribe(msg => {
+      this.dimensions = {
+        gravity: 0.0,
+        kick: 1.2,
+        box: {
+          width: 1,
+          height: 2,
+          depth: 2,
+          rotationX: 0.05,
+          rotationY: 0.00,
+          rotationZ: 0.00,
+          fadeSpeed: 0.01,
+        },
+        lights: {
+          directional: {
+            intensity: 0.8,
+          }
+        }
+      }
+    })
+    this.midi.stream.filter(msg => msg.keyName === 'B2').subscribe(msg => {
+      this.dimensions = {
+        gravity: 0.1,
+        kick: 1.2,
+        box: {
+          width: 6.8,
+          height: 4,
+          depth: 2.4,
+          rotationX: 0.05,
+          rotationY: 0.00,
+          rotationZ: 0.00,
+          fadeSpeed: 0.001,
+        },
+        lights: {
+          directional: {
+            intensity: 0.8,
+          }
+        }
+      }
+    })
+    this.midi.stream.filter(msg => msg.keyName === 'B3').subscribe(msg => {
+      this.dimensions = {
+        gravity: 0.0,
+        kick: 0.2,
+        box: {
+          width: 5,
+          height: 4,
+          depth: 2.4,
+          rotationX: 0.05,
+          rotationY: 0.00,
+          rotationZ: 0.00,
+          fadeSpeed: 0.001,
+        },
+        lights: {
+          directional: {
+            intensity: 0.8,
+          }
+        }
+      }
+    })
   }
 
   sceneSetup() {
@@ -58,6 +160,7 @@ export class PianoComponent implements AfterViewInit {
 
     this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true })
     this.renderer.setClearColor(0xffffff, 1)
+    this.renderer.setClearColor(0x111111, 1)
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setSize(this.sceneContainer.nativeElement.scrollWidth, this.sceneContainer.nativeElement.scrollHeight)
@@ -133,11 +236,13 @@ export class PianoComponent implements AfterViewInit {
     }
 
     // possibly needed later:
-    // this.controls.update()
+    this.controls.update()
 
-    // push a message down the before render stream
+    // do your update
+    this.directional.intensity = this.dimensions.lights.directional.intensity
+
     // push current dimensions down the stream.
-    //this.animation.beforeRenderSource.next(this.dimensions)
+    this.animation.beforeRenderSource.next(this.dimensions)
 
     // repeat
     requestAnimationFrame(this.animate)
@@ -152,6 +257,7 @@ export class PianoComponent implements AfterViewInit {
 class Keyboard {
 
   midi: MIDIService
+  animation: AnimationService
   keyboardObject = new THREE.Object3D()
 
   notes = []
@@ -164,8 +270,9 @@ class Keyboard {
   ) { }
 
   /** get access to services */
-  setup(midi: MIDIService) {
+  setup(midi: MIDIService, animation: AnimationService) {
     this.midi = midi
+    this.animation = animation
     this.makeNotes()
     this.placeNotes()
   }
@@ -182,7 +289,7 @@ class Keyboard {
       let octave = Math.floor((i + 9) / 12)
       let position = i
 
-      let note = new Note(this.midi, name, color, midiKey, octave, position)
+      let note = new Note(this.midi, this.animation, this.scene, name, color, midiKey, octave, position)
       note.highlightContent()
 
       this.notes.push(note)
@@ -217,9 +324,12 @@ class Keyboard {
     let width = box.max.x + (box.min.x * -1)
     let x = width / -2
 
+    let frameColor = 0xffffff
+    frameColor = 0x333333
+
     // back
     let backBox = new THREE.BoxGeometry(width, 2, 2)
-    let backMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    let backMaterial = new THREE.MeshPhongMaterial({ color: frameColor })
     let back = new THREE.Mesh(backBox, backMaterial)
     back.position.x = (width / 2) - 0.5
     back.position.z = -3
@@ -227,27 +337,27 @@ class Keyboard {
 
     // bottom
     let bottomBox = new THREE.BoxGeometry(width, 1, 5)
-    let bottomMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    let bottomMaterial = new THREE.MeshPhongMaterial({ color: frameColor })
     let bottom = new THREE.Mesh(bottomBox, bottomMaterial)
     bottom.position.x = (width / 2) - 0.5
     bottom.position.y = -0.75
     bottom.position.z = 0
-    this.keyboardObject.add(bottom)
+    //this.keyboardObject.add(bottom)
 
     // right
     let rightWidth = 2
     let rightBox = new THREE.BoxGeometry(rightWidth, 2.25, 6.5)
-    let rightMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    let rightMaterial = new THREE.MeshPhongMaterial({ color: frameColor })
     let right = new THREE.Mesh(rightBox, rightMaterial)
     right.position.x = width + 0.5
     right.position.y = -0.125
     right.position.z = -0.75
     this.keyboardObject.add(right)
 
-    // right
+    // left
     let leftWidth = 2
     let leftBox = new THREE.BoxGeometry(leftWidth, 2.25, 6.5)
-    let leftMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    let leftMaterial = new THREE.MeshPhongMaterial({ color: frameColor })
     let left = new THREE.Mesh(leftBox, leftMaterial)
     left.position.x = -1.5
     left.position.y = -0.125
@@ -272,8 +382,13 @@ class Note {
   isMyFifth = false
   // todo: is my low third (I am the minor fall)
 
+  kick = 1.5
+  dimensions
+
   constructor(
     public midi: MIDIService,
+    public animation: AnimationService,
+    public scene: THREE.Scene,
     public name: string,
     public color: string,
     public midiKey: number,
@@ -282,17 +397,20 @@ class Note {
     public colorHSL?: any,
   ) {
     this.makeBase()
+    this.animation.beforeRenderStream.subscribe((dimensions) => {
+      this.dimensions = dimensions
+    })
   }
 
   makeBase() {
     if (this.color === 'white') {
       let whiteBox = new THREE.BoxGeometry(0.98, 0.98, 4)
-      let whiteKeyMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff })
+      let whiteKeyMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 })
       let whiteMesh = new THREE.Mesh(whiteBox, whiteKeyMaterial)
       this.baseMesh = whiteMesh
     } else {
       let blackBox = new THREE.BoxGeometry(0.4, 1, 2)
-      let blackKeyMaterial = new THREE.MeshPhongMaterial({ color: 0x203010 })
+      let blackKeyMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 })
       let blackMesh = new THREE.Mesh(blackBox, blackKeyMaterial)
       this.baseMesh = blackMesh
     }
@@ -308,6 +426,28 @@ class Note {
 
       if (msg.key === this.midiKey) {
         this.iAmSelf = true
+
+        /**
+         * Firing of a vessel
+         */
+        let vessel = new Vessel(this.animation, this.scene, this, this.dimensions)
+
+        // where is the note?
+        this.scene.updateMatrixWorld(true);
+        let position = new THREE.Vector3()
+        position.setFromMatrixPosition(this.baseMesh.matrixWorld)
+        vessel.vesselMesh.position.x = position.x
+
+
+
+        vessel.vesselMesh.position.y = 2
+        vessel.vesselMesh.position.z = -3
+        vessel.velocity.y = ((msg.velocity / 127) * 50) * this.dimensions.kick
+        vessel.velocity.z = -0.1
+
+
+
+        this.scene.add(vessel.vesselMesh)
 
         if (this.color === 'white') {
           this.baseMesh.rotateX(0.1)
@@ -400,3 +540,75 @@ class Note {
     })
   }
 } /** end of Note */
+
+class Vessel {
+
+  velocity = new THREE.Vector3()
+  vesselMesh: THREE.Mesh
+  animationSubscription
+
+  constructor(
+    public animation: AnimationService,
+    public scene: THREE.Scene,
+    public note: Note,
+    public dimensions,
+  ) {
+    let vesselGeo = new THREE.BoxGeometry(
+      this.dimensions.box.width,
+      this.dimensions.box.height,
+      this.dimensions.box.depth
+    )
+    let vesselMat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
+
+    let hsla = HSLAs[note.name]
+    vesselMat.color.setHSL(hsla.h, hsla.s, hsla.l)
+    this.vesselMesh = new THREE.Mesh(vesselGeo, vesselMat)
+
+    this.animationSubscription = this.animation.beforeRenderStream.subscribe((dimensions) => {
+      // apply gravity
+      let gravityVector = new THREE.Vector3(0, (-1 / 60) * dimensions.gravity, 0)
+      this.velocity.add(gravityVector)
+
+      // rotate
+      this.vesselMesh.rotation.x -= dimensions.box.rotationX
+      this.vesselMesh.rotation.y += dimensions.box.rotationY
+      this.vesselMesh.rotation.z += dimensions.box.rotationZ
+
+
+      // fade
+      this.vesselMesh.material.opacity -= this.dimensions.box.fadeSpeed
+
+      // re-position yourself
+      this.vesselMesh.position.add(this.velocity)
+      if (this.vesselMesh.position.y < 0 || this.vesselMesh.material.opacity < 0) {
+        // this.vesselMesh.visible = false
+        this.scene.remove(this.vesselMesh)
+
+        this.animationSubscription.unsubscribe()
+      }
+    })
+
+  }
+
+
+
+}
+
+const randomColor = () => {
+  return Math.floor(Math.random() * 16777215)
+}
+
+const HSLAs = {
+  'A': { h: 0.08, s: 0.71, l: 0.75, a: 1 },
+  'Bb': { h: 0.0833333, s: 0.5, l: 0.833333, a: 1 },
+  'B': { h: 0.15, s: 0.5, l: 0.916666, a: 1 },
+  'C': { h: 0.18, s: 0.1, l: 0.95, a: 1 }, // fix to white
+  'C#': { h: 0.19, s: 0.5, l: 0.9166, a: 1 },
+  'D': { h: 0.18, s: 0.71, l: 0.8333, a: 1 },
+  'D#': { h: 0.583333333, s: 0.5, l: 0.75, a: 1 },
+  'E': { h: 0.53, s: 0.57, l: 0.65, a: 1 },
+  'F': { h: 0.64, s: 0.5, l: 0.5833, a: 1 },
+  'F#': { h: 0.38, s: 0.5, l: 0.71, a: 1 },
+  'G': { h: -1, s: 0.59, l: 0.58333, a: 1 }, // fix to black
+  'G#': { h: -0.9, s: 0.5, l: 0.666, a: 1 },
+}

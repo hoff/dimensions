@@ -162,7 +162,7 @@ export class MIDIService {
           let velocity = data.velocity; // the velocity of the note
 
           // stream the event
-          setTimeout(() => { this.streamMessage({ data: [message, note, velocity] }) }, 0)
+          this.streamMessage({ data: [message, note, velocity] })
         })
       }
     })

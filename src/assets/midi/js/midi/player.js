@@ -325,6 +325,7 @@ var startAudio = function(currentTime, fromCache, onsuccess) {
 				    interval: scheduleTracking(channelId, note, queuedTime + midi.startDelay, offset - foffset, 144, event.velocity)
 				});
 				messages++;
+				console.log(channelId)
 				break;
 			case 'noteOff':
 				if (channel.mute) break;

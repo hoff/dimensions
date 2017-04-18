@@ -1,11 +1,79 @@
-<div #sceneContainer style="width: 100vw; height: 70vh;"></div>
-<div style="width: 100vw; height: 30vh;">
+
+<div id="sceneContainer" #sceneContainer style="width: 100vw; height: 100vh;"></div>
+<div style="z-index:100; overflow-y: scroll; top: 0; left: 0; background: #000; color: white; position:fixed; width: 300px; padding: 30px; height: 100vh;">
 
   <button (click)="midi.player.start()">play</button>
 <button (click)="midi.player.stop()">stop</button>
 
 <button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
 
+keyboard: <input type="checkbox" [(ngModel)]="keyboard?.keyboardObject.visible" />
+
+<button (click)="requestFullscreen()">full screen</button>
+
+<hr>
+directional x {{ directional?.position.x}}
+<app-slider *ngIf="directional" [from]="-100" [to]="100" [step]="0.1" [val]="directional.position.x"
+  (onChange)="directional.position.x = $event"></app-slider>
+
+directional y {{ directional?.position.y}}
+<app-slider *ngIf="directional" [from]="-100" [to]="100" [step]="0.1" [val]="directional.position.y"
+  (onChange)="directional.position.y = $event"></app-slider>
+
+
+camera x {{ camera?.x }}
+  <app-slider *ngIf="camera" [from]="-100" [to]="100" [step]="0.1" [val]="camera.position.x"
+  (onChange)="camera.position.x = $event"></app-slider>
+  
+  camera y {{ camera?.y }}
+  <app-slider *ngIf="camera" [from]="-100" [to]="100" [step]="0.1" [val]="camera.position.y"
+  (onChange)="camera.position.y = $event"></app-slider>
+
+    camera z {{ camera?.z }}
+  <app-slider *ngIf="camera" [from]="-100" [to]="100" [step]="0.1" [val]="camera.position.z"
+  (onChange)="camera.position.z = $event"></app-slider>
+
+
+directional light intensity: {{ dimensions.lights.directional.intensity }}
+<app-slider [from]="0" [to]="10" [step]="0.1" [val]="dimensions.lights.directional.intensity"
+  (onChange)="dimensions.lights.directional.intensity = $event"></app-slider>
+
+box fadeSpeed: {{ dimensions.box.fadeSpeed }}
+<app-slider [from]="0" [to]="1" [step]="0.001" [val]="dimensions.box.fadeSpeed"
+  (onChange)="dimensions.box.fadeSpeed = $event"></app-slider>
+
+box rotationX: {{ dimensions.box.rotationX }}
+<app-slider [from]="0" [to]="4" [step]="0.01" [val]="dimensions.box.rotationX"
+  (onChange)="dimensions.box.rotationX = $event"></app-slider>
+
+box rotationY: {{ dimensions.box.rotationY }}
+<app-slider [from]="0" [to]="4" [step]="0.01" [val]="dimensions.box.rotationY"
+  (onChange)="dimensions.box.rotationY = $event"></app-slider>
+
+box rotationZ: {{ dimensions.box.rotationZ }}
+<app-slider [from]="0" [to]="4" [step]="0.01" [val]="dimensions.box.rotationZ"
+  (onChange)="dimensions.box.rotationZ = $event"></app-slider>
+
+
+box width: {{ dimensions.box.width }}
+<app-slider [from]="0" [to]="10" [step]="0.1" [val]="dimensions.box.width"
+  (onChange)="dimensions.box.width = $event"></app-slider>
+
+box height: {{ dimensions.box.height }}
+<app-slider [from]="0" [to]="10" [step]="0.1" [val]="dimensions.box.height"
+  (onChange)="dimensions.box.height = $event"></app-slider>
+
+box depth: {{ dimensions.box.depth }}
+<app-slider [from]="0" [to]="10" [step]="0.1" [val]="dimensions.box.depth"
+  (onChange)="dimensions.box.depth = $event"></app-slider>
+
+kick: {{ dimensions.kick }}
+<app-slider [from]="0" [to]="10" [step]="0.1" [val]="dimensions.kick"
+  (onChange)="dimensions.kick = $event"></app-slider>
+
+gravity: {{ dimensions.gravity }}
+<app-slider [from]="-1" [to]="1" [step]="0.001" [val]="dimensions.gravity"
+  (onChange)="dimensions.gravity = $event"></app-slider>
 
   {{ camera?.fov }}
   <app-slider *ngIf="camera" [from]="0" [to]="360" [val]="camera.fov"
