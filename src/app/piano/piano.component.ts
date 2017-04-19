@@ -4,10 +4,13 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angula
 // Three
 import * as THREE from 'three'
 import OrbitControls from 'orbit-controls-es6'
+import { Color } from 'three'
 
 // Services
 import { MIDIService } from '../midi.service'
 import { AnimationService } from '../animation.service'
+
+
 
 @Component({
   selector: 'app-piano',
@@ -17,6 +20,8 @@ import { AnimationService } from '../animation.service'
 export class PianoComponent implements AfterViewInit {
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
+
+   
 
   // scene, camera, renderer
   scene: THREE.Scene
@@ -67,6 +72,9 @@ export class PianoComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+    let win: any = window
+    win.THREE = THREE
+
     /** set up the scene */
     this.sceneSetup()
     /** make keyboard */
@@ -224,15 +232,15 @@ export class PianoComponent implements AfterViewInit {
     // spotlight
     this.spot = new THREE.SpotLight()
     this.spot.castShadow = true
-    this.spot.position.x = -1
+    this.spot.position.x = 0
     this.spot.position.y = 4
     this.spot.position.z = 3
     const shadow = this.spot.shadow
-
-    // this.scene.add(this.spot)
+    this.spot.visible = false
+    this.scene.add(this.spot)
 
     const spotLightHelper = new THREE.SpotLightHelper(this.spot);
-    //this.scene.add( spotLightHelper )
+    // this.scene.add( spotLightHelper )
 
     // ambient
     this.ambient = new THREE.AmbientLight(0xff0000)
@@ -463,7 +471,7 @@ class Note {
         let scale = 1
         vessel.vesselMesh.scale.set(scaleX, scaleY, scale)
 
-
+        
 
         vessel.vesselMesh.position.y = 2
         vessel.vesselMesh.position.z = -3
@@ -587,6 +595,11 @@ class Vessel {
 
     let hsla = HSLAs[note.name]
     vesselMat.color.setHSL(hsla.h, hsla.s, hsla.l)
+
+    let glow = new THREE.Color()
+    glow.setHSL(hsla.h, hsla.s, hsla.l - 0.2)
+    glow.setHSL(1, 0, 0.7)
+    vesselMat.emissive = glow
     this.vesselMesh = new THREE.Mesh(vesselGeo, vesselMat)
 
     this.animationSubscription = this.animation.beforeRenderStream.subscribe((dimensions) => {
@@ -602,6 +615,18 @@ class Vessel {
 
       // fade
       this.vesselMesh.material.opacity -= this.dimensions.box.fadeSpeed
+
+      let myMesh = this.vesselMesh
+      let myMaterial: any = myMesh.material
+
+      let h = vesselMat.emissive.getHSL().h
+      let s = vesselMat.emissive.getHSL().s
+      let l = vesselMat.emissive.getHSL().l - 0.05
+      
+      let co: Color = myMaterial.emissive
+      co.setHSL(h, s, l)
+      myMaterial.needsUpdate = true
+      
 
       // re-position yourself
       this.vesselMesh.position.add(this.velocity)

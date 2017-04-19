@@ -12,6 +12,15 @@ keyboard: <input type="checkbox" [(ngModel)]="keyboard?.keyboardObject.visible" 
 <button (click)="requestFullscreen()">full screen</button>
 
 <hr>
+<flex-row>
+<app-slider [xyz]="'y'" (onChange)="spot.position.y = $event"></app-slider>
+  <flex-col-end>
+    <app-slider [xyz]="'z'" (onChange)="spot.position.z = $event"></app-slider>
+    <app-slider [xyz]="'x'" (onChange)="spot.position.x = $event"></app-slider>
+  </flex-col-end>
+</flex-row>
+
+<hr>
 directional x {{ directional?.position.x}}
 <app-slider *ngIf="directional" [from]="-100" [to]="100" [step]="0.1" [val]="directional.position.x"
   (onChange)="directional.position.x = $event"></app-slider>

@@ -37,6 +37,11 @@ flex-col-center {
 	display: flex;
 	align-items: center;
 }
+flex-col-end {
+  flex-direction: column;
+	display: flex;
+	justify-content: flex-end;
+}
 
 
 
