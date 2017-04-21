@@ -10,6 +10,14 @@ import { Color } from 'three'
 import { MIDIService } from '../midi.service'
 import { AnimationService } from '../animation.service'
 
+interface Light {
+  name: string
+  type: string
+  color: number
+  intensity: number
+  position?: any
+  target?: any
+}
 
 
 @Component({
@@ -22,7 +30,7 @@ export class PianoComponent implements AfterViewInit {
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
 
-   
+
 
   // scene, camera, renderer
   scene: THREE.Scene
@@ -34,6 +42,8 @@ export class PianoComponent implements AfterViewInit {
   directional: THREE.DirectionalLight
   ambient: THREE.AmbientLight
   spot: THREE.SpotLight
+  // new: lights array!
+  lights = []
 
   // keyboard
   keyboard: Keyboard
@@ -66,12 +76,12 @@ export class PianoComponent implements AfterViewInit {
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
-  ) { 
+  ) {
     let myWorker = new Worker('/assets/workers/worker.js')
     myWorker.postMessage([1, 2])
     console.log('Message posted to worker')
-    myWorker.onmessage = function(e) {
-      
+    myWorker.onmessage = function (e) {
+
       console.log('Message received from worker', e.data);
     }
   }
@@ -248,7 +258,7 @@ export class PianoComponent implements AfterViewInit {
     this.directional.shadowMapWidth = 100
     this.directional.shadowMapHeight = 1000
 
-    this.scene.add(this.directional)
+    //this.scene.add(this.directional)
 
     // spotlight
     this.spot = new THREE.SpotLight()
@@ -258,21 +268,61 @@ export class PianoComponent implements AfterViewInit {
     this.spot.position.z = 3
     const shadow = this.spot.shadow
     this.spot.visible = false
-    this.scene.add(this.spot)
+    //this.scene.add(this.spot)
 
     const spotLightHelper = new THREE.SpotLightHelper(this.spot);
     // this.scene.add( spotLightHelper )
 
     // ambient
     this.ambient = new THREE.AmbientLight(0xff0000)
-    this.ambient.intensity = 0
-    this.scene.add(this.ambient)
+    this.ambient.intensity = 1
+    //this.scene.add(this.ambient)
 
     const helper = new THREE.DirectionalLightHelper(this.directional);
     const camHelper = new THREE.CameraHelper(this.directional.shadow.camera);
 
     // this.scene.add(helper)
     //this.scene.add(camHelper)
+
+    // load lights from data
+    let lights: Light[] = [
+      {
+        name: 'red ambitent',
+        type: 'ambient',
+        color: 0xff0000,
+        intensity: 1,
+        
+      },
+      {
+        name: 'sun',
+        type: 'directional',
+        color: 0xffffff,
+        intensity: 1,
+        position: {x: 2, y: 10, z: 7},
+        target: {x: 0, y: 0, z: 0},
+      }
+    ]
+    /** first, remove all lights */
+    for (let light of this.lights) {
+      this.scene.remove(light)
+    }
+    this.lights = []
+
+    // add lights from data
+    for (let light of lights) {
+      let licht
+      if (light.type === 'ambient') {
+        licht = new THREE.AmbientLight(light.color)
+        licht.intensity = light.intensity
+      }
+      if (light.type === 'directional') {
+        licht = new THREE.DirectionalLight(light.color, light.intensity)
+        licht.position.set(light.position.x, light.position.y, light.position.z)
+        licht.target.position.set(light.target.x, light.target.y, light.target.z)
+      }
+      this.scene.add(licht)
+      this.lights.push(licht)
+    }
   }
 
   animate = () => {
@@ -492,12 +542,12 @@ class Note {
         let scale = 1
         vessel.vesselMesh.scale.set(scaleX, scaleY, scale)
 
-        
+
 
         vessel.vesselMesh.position.y = 2
         vessel.vesselMesh.position.z = -3
         vessel.velocity.y = ((msg.velocity / 127) * 50) * this.dimensions.kick
-        vessel.velocity.z = this.dimensions.zSpeed 
+        vessel.velocity.z = this.dimensions.zSpeed
 
 
 
@@ -652,11 +702,11 @@ class Vessel {
       let h = vesselMat.emissive.getHSL().h
       let s = vesselMat.emissive.getHSL().s
       let l = vesselMat.emissive.getHSL().l - 0.05
-      
+
       let co: Color = myMaterial.emissive
       co.setHSL(h, s, l)
       myMaterial.needsUpdate = true
-      
+
 
       // re-position yourself
       this.vesselMesh.position.add(this.velocity)
@@ -669,7 +719,7 @@ class Vessel {
 
         this.animationSubscription.unsubscribe()
       }
-      
+
       let then = new Date().getTime()
       let delta = then - now
       //console.log('update vessel in MS ', delta)

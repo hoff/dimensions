@@ -4,6 +4,12 @@
 
 down count: {{ midi.downCount }}
 
+<h3>LIGHTS!!</h3>
+<div *ngFor="let light of lights">
+  jo {{ light.name }}
+</div>
+
+
 <button (click)="save('R5')">save config to R5</button>
 <button (click)="load('R5')">load R5 config</button>
 
