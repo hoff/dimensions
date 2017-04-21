@@ -1,5 +1,5 @@
 // Angular
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core'
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core'
 
 // Three
 import * as THREE from 'three'
@@ -15,7 +15,8 @@ import { AnimationService } from '../animation.service'
 @Component({
   selector: 'app-piano',
   templateUrl: './piano.component.html',
-  styleUrls: ['./piano.component.css']
+  styleUrls: ['./piano.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PianoComponent implements AfterViewInit {
 
@@ -45,6 +46,7 @@ export class PianoComponent implements AfterViewInit {
   dimensions = {
     gravity: 0.8,
     kick: 1.5,
+    zSpeed: -0.1,
     box: {
       width: 1,
       height: 2,
@@ -64,7 +66,22 @@ export class PianoComponent implements AfterViewInit {
   constructor(
     public midi: MIDIService,
     public animation: AnimationService,
-  ) { }
+  ) { 
+    let myWorker = new Worker('/assets/workers/worker.js')
+    myWorker.postMessage([1, 2])
+    console.log('Message posted to worker')
+    myWorker.onmessage = function(e) {
+      
+      console.log('Message received from worker', e.data);
+    }
+  }
+
+  save(button) {
+    localStorage.setItem(button, JSON.stringify(this.dimensions))
+  }
+  load(button) {
+    this.dimensions = JSON.parse(localStorage.getItem(button))
+  }
 
   requestFullscreen() {
     let doc = document.getElementById('sceneContainer')
@@ -103,6 +120,7 @@ export class PianoComponent implements AfterViewInit {
     this.midi.stream.filter(msg => msg.keyName === 'B1').subscribe(msg => {
       this.dimensions = {
         gravity: 0.0,
+        zSpeed: -0.1,
         kick: 1.2,
         box: {
           width: 1,
@@ -123,6 +141,7 @@ export class PianoComponent implements AfterViewInit {
     this.midi.stream.filter(msg => msg.keyName === 'B2').subscribe(msg => {
       this.dimensions = {
         gravity: 0.1,
+        zSpeed: -0.1,
         kick: 1.2,
         box: {
           width: 6.8,
@@ -143,6 +162,7 @@ export class PianoComponent implements AfterViewInit {
     this.midi.stream.filter(msg => msg.keyName === 'B3').subscribe(msg => {
       this.dimensions = {
         gravity: 0.0,
+        zSpeed: -0.1,
         kick: 0.2,
         box: {
           width: 5,
@@ -163,6 +183,7 @@ export class PianoComponent implements AfterViewInit {
     this.midi.stream.filter(msg => msg.keyName === 'B4').subscribe(msg => {
       this.dimensions = {
         gravity: 0.0,
+        zSpeed: -0.1,
         kick: 0,
         box: {
           width: 5,
@@ -261,14 +282,14 @@ export class PianoComponent implements AfterViewInit {
     this.fps = Math.round(1000 / passed)
     this.lastFrameAt = now
     if (this.fps < 50) {
-      this.warnings.unshift(`frame rate at ${this.fps}`)
+      // this.warnings.unshift(`frame rate at ${this.fps}`)
     }
 
     // possibly needed later:
     this.controls.update()
 
-    // do your update
-    this.directional.intensity = this.dimensions.lights.directional.intensity
+    // do your update -> lights becomes a list.
+    //this.directional.intensity = this.dimensions.lights.directional.intensity
 
     // push current dimensions down the stream.
     this.animation.beforeRenderSource.next(this.dimensions)
@@ -476,7 +497,7 @@ class Note {
         vessel.vesselMesh.position.y = 2
         vessel.vesselMesh.position.z = -3
         vessel.velocity.y = ((msg.velocity / 127) * 50) * this.dimensions.kick
-        vessel.velocity.z = -0.1
+        vessel.velocity.z = this.dimensions.zSpeed 
 
 
 
@@ -586,7 +607,12 @@ class Vessel {
     public note: Note,
     public dimensions,
   ) {
-    let vesselGeo = new THREE.BoxGeometry(
+    let xvesselGeo = new THREE.BoxGeometry(
+      this.dimensions.box.width,
+      this.dimensions.box.height,
+      this.dimensions.box.depth
+    )
+    let vesselGeo = new THREE.BoxBufferGeometry(
       this.dimensions.box.width,
       this.dimensions.box.height,
       this.dimensions.box.depth
@@ -603,12 +629,16 @@ class Vessel {
     this.vesselMesh = new THREE.Mesh(vesselGeo, vesselMat)
 
     this.animationSubscription = this.animation.beforeRenderStream.subscribe((dimensions) => {
+      let now = new Date().getTime()
+      let childCount = this.scene.children.length
+      //console.log('on this render pass, there are children:', childCount )
+
       // apply gravity
       let gravityVector = new THREE.Vector3(0, (-1 / 60) * dimensions.gravity, 0)
       this.velocity.add(gravityVector)
 
       // rotate
-      this.vesselMesh.rotation.x -= dimensions.box.rotationX
+      this.vesselMesh.rotation.x += dimensions.box.rotationX
       this.vesselMesh.rotation.y += dimensions.box.rotationY
       this.vesselMesh.rotation.z += dimensions.box.rotationZ
 
@@ -630,12 +660,19 @@ class Vessel {
 
       // re-position yourself
       this.vesselMesh.position.add(this.velocity)
+
+
+
       if (this.vesselMesh.position.y < 0 || this.vesselMesh.material.opacity < 0) {
         // this.vesselMesh.visible = false
         this.scene.remove(this.vesselMesh)
 
         this.animationSubscription.unsubscribe()
       }
+      
+      let then = new Date().getTime()
+      let delta = then - now
+      //console.log('update vessel in MS ', delta)
     })
 
   }

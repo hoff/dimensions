@@ -1,6 +1,11 @@
 
-<div id="sceneContainer" #sceneContainer style="width: 100vw; height: 100vh;"></div>
+<div id="sceneContainer" #sceneContainer style="width: 100vw; height: 120vh;"></div>
 <div style="z-index:100; overflow-y: scroll; top: 0; left: 0; background: #000; color: white; position:fixed; width: 300px; padding: 30px; height: 100vh;">
+
+down count: {{ midi.downCount }}
+
+<button (click)="save('R5')">save config to R5</button>
+<button (click)="load('R5')">load R5 config</button>
 
   <button (click)="midi.player.start()">play</button>
 <button (click)="midi.player.stop()">stop</button>
@@ -21,6 +26,14 @@ keyboard: <input type="checkbox" [(ngModel)]="keyboard?.keyboardObject.visible" 
 </flex-row>
 
 <hr>
+z speed x {{ dimensions.zSpeed }}
+<app-slider *ngIf="controls" [from]="-1" [to]="1" [step]="0.001" [val]="dimensions.zSpeed"
+  (onChange)="dimensions.zSpeed = $event"></app-slider>
+
+autorotate speed x {{ controls?.autoRotateSpeed }}
+<app-slider *ngIf="controls" [from]="-10" [to]="10" [step]="0.01" [val]="directional.position.x"
+  (onChange)="controls.autoRotateSpeed = $event"></app-slider>
+
 directional x {{ directional?.position.x}}
 <app-slider *ngIf="directional" [from]="-100" [to]="100" [step]="0.1" [val]="directional.position.x"
   (onChange)="directional.position.x = $event"></app-slider>

@@ -23,6 +23,9 @@ declare var sketch: any
 @Injectable()
 export class MIDIService {
 
+  // test: count downs
+  downCount = 0
+
   /**
    * Observable and Stream for ALL midi messages
    */
@@ -160,6 +163,10 @@ export class MIDIService {
           let message = data.message; // 128 is noteOff, 144 is noteOn
           let note = data.note; // the note
           let velocity = data.velocity; // the velocity of the note
+
+          if (message === 144) {
+            this.downCount ++
+          }
 
           // stream the event
           this.streamMessage({ data: [message, note, velocity] })
