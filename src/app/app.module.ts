@@ -26,7 +26,7 @@ import { ControlPanelComponent } from './control-panel/control-panel.component';
 import { CemetaryComponent } from './cemetary/cemetary.component'
 
 const appRoutes: Routes = [
-  { path: '', component: HomePageComponent },
+  { path: '', component: PianoComponent },
   { path: 'cemetary', component: CemetaryComponent },
   { path: 'piano', component: PianoComponent },
   { path: 'flat', component: FlatPageComponent },
