@@ -133,7 +133,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 var appRoutes = [
-    { path: '', component: __WEBPACK_IMPORTED_MODULE_17__home_page_home_page_component__["a" /* HomePageComponent */] },
+    { path: '', component: __WEBPACK_IMPORTED_MODULE_22__piano_piano_component__["a" /* PianoComponent */] },
     { path: 'cemetary', component: __WEBPACK_IMPORTED_MODULE_24__cemetary_cemetary_component__["a" /* CemetaryComponent */] },
     { path: 'piano', component: __WEBPACK_IMPORTED_MODULE_22__piano_piano_component__["a" /* PianoComponent */] },
     { path: 'flat', component: __WEBPACK_IMPORTED_MODULE_19__flat_page_flat_page_component__["a" /* FlatPageComponent */] },
