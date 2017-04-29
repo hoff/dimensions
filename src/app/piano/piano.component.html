@@ -1,13 +1,19 @@
+<div style="display: none; position:absolute; top: 0; left: 0; width: 100%; height: 120vh; background: url(http://apod.nasa.gov/apod/image/0603/coma_misti.jpg) -80px -80px;
+  color: red;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  font-weight: bold;
+  font-size: 100px;
+  font-family: arial, helvetica;
+  width: 600px;
 
+  margin: 50px auto;
+  text-align: center;">
+  hallo!</div>
 <div id="sceneContainer" #sceneContainer style="width: 100vw; height: 120vh;"></div>
 <div style="z-index:100; overflow-y: scroll; top: 0; left: 0; background: #000; color: white; position:fixed; width: 300px; padding: 30px; height: 100vh;">
 
-down count: {{ midi.downCount }}
 
-<h3>LIGHTS!!</h3>
-<div *ngFor="let light of lights">
-  jo {{ light.name }}
-</div>
 
 
 <button (click)="save('R5')">save config to R5</button>

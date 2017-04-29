@@ -10,6 +10,8 @@ import { Color } from 'three'
 import { MIDIService } from '../midi.service'
 import { AnimationService } from '../animation.service'
 
+import * as WebMidi from 'webmidi'
+
 interface Light {
   name: string
   type: string
@@ -54,24 +56,24 @@ export class PianoComponent implements AfterViewInit {
   warnings = []
 
   dimensions = {
-    gravity: 0.8,
-    kick: 1.5,
-    zSpeed: -0.1,
-    box: {
-      width: 1,
-      height: 2,
-      depth: 2,
-      rotationX: 0.05,
-      rotationY: 0.01,
-      rotationZ: 0.01,
-      fadeSpeed: 0.03,
-    },
-    lights: {
-      directional: {
-        intensity: 1,
+        gravity: 0.0,
+        zSpeed: -0.1,
+        kick: 0,
+        box: {
+          width: 5,
+          height: 4,
+          depth: 2.4,
+          rotationX: 0.01,
+          rotationY: 0.00,
+          rotationZ: 0.00,
+          fadeSpeed: 0.001,
+        },
+        lights: {
+          directional: {
+            intensity: 0.8,
+          }
+        }
       }
-    }
-  }
 
   constructor(
     public midi: MIDIService,
@@ -84,6 +86,32 @@ export class PianoComponent implements AfterViewInit {
 
       console.log('Message received from worker', e.data);
     }
+
+    WebMidi.enable(function (err) {
+      if (err) {
+        console.log("WebMidi could not be enabled.", err);
+      } else {
+        console.log("WebMidi enabled!")
+        WebMidi.getInputByName('IAC Driver Bus 1').addListener('noteon', 'all', function (e) {
+          console.log('webmidi ole !note on', e);
+        });
+        WebMidi.inputs.forEach(input => {
+          console.log('- id  :', input.id);
+          console.log('- name:', input.name);
+          console.log('- manu:', input.manufacturer);
+          console.log('- conn:', input.connection);
+          console.log('---');
+        });
+        console.log('outputs:', WebMidi.outputs);
+        WebMidi.outputs.forEach(output => {
+          console.log('- id  :', output.id);
+          console.log('- name:', output.name);
+          console.log('- manu:', output.manufacturer);
+          console.log('- conn:', output.connection);
+          console.log('---');
+        });
+      }
+    })
   }
 
   save(button) {
@@ -258,7 +286,7 @@ export class PianoComponent implements AfterViewInit {
     this.directional.shadowMapWidth = 100
     this.directional.shadowMapHeight = 1000
 
-    //this.scene.add(this.directional)
+    this.scene.add(this.directional)
 
     // spotlight
     this.spot = new THREE.SpotLight()
@@ -291,15 +319,15 @@ export class PianoComponent implements AfterViewInit {
         type: 'ambient',
         color: 0xff0000,
         intensity: 1,
-        
+
       },
       {
         name: 'sun',
         type: 'directional',
         color: 0xffffff,
         intensity: 1,
-        position: {x: 2, y: 10, z: 7},
-        target: {x: 0, y: 0, z: 0},
+        position: { x: 2, y: 10, z: 7 },
+        target: { x: 0, y: 0, z: 0 },
       }
     ]
     /** first, remove all lights */
@@ -320,7 +348,7 @@ export class PianoComponent implements AfterViewInit {
         licht.position.set(light.position.x, light.position.y, light.position.z)
         licht.target.position.set(light.target.x, light.target.y, light.target.z)
       }
-      this.scene.add(licht)
+      //this.scene.add(licht)
       this.lights.push(licht)
     }
   }
@@ -670,7 +698,7 @@ class Vessel {
     let vesselMat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
 
     let hsla = HSLAs[note.name]
-    vesselMat.color.setHSL(hsla.h, hsla.s, hsla.l)
+    // vesselMat.color.setHSL(hsla.h, hsla.s, hsla.l)
 
     let glow = new THREE.Color()
     glow.setHSL(hsla.h, hsla.s, hsla.l - 0.2)
@@ -688,13 +716,13 @@ class Vessel {
       this.velocity.add(gravityVector)
 
       // rotate
-      this.vesselMesh.rotation.x += dimensions.box.rotationX
-      this.vesselMesh.rotation.y += dimensions.box.rotationY
-      this.vesselMesh.rotation.z += dimensions.box.rotationZ
+      this.vesselMesh.rotation.x += dimensions.box.rotationX / 10
+      this.vesselMesh.rotation.y += dimensions.box.rotationY / 10 
+      this.vesselMesh.rotation.z += dimensions.box.rotationZ / 10
 
 
       // fade
-      this.vesselMesh.material.opacity -= this.dimensions.box.fadeSpeed
+      this.vesselMesh.material.opacity -= this.dimensions.box.fadeSpeed / 30
 
       let myMesh = this.vesselMesh
       let myMaterial: any = myMesh.material

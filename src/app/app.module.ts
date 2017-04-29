@@ -3,6 +3,9 @@ import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, Routes } from '@angular/router'
+import 'hammerjs'
+import { NoopAnimationsModule, BrowserAnimationsModule } from '@angular/platform-browser/animations'
+import { MdButtonModule, MdCheckboxModule, MdSliderModule } from '@angular/material'
 
 import { AppComponent } from './app.component'
 import { MIDIService } from './midi.service';
@@ -18,13 +21,18 @@ import { EntertainerComponent } from './entertainer/entertainer.component';
 import { FlatPageComponent } from './flat-page/flat-page.component';
 import { SliderComponent } from './slider/slider.component';
 import { ToggleComponent } from './toggle/toggle.component';
-import { PianoComponent } from './piano/piano.component'
+import { PianoComponent } from './piano/piano.component';
+import { ControlPanelComponent } from './control-panel/control-panel.component';
+import { CemetaryComponent } from './cemetary/cemetary.component'
 
 const appRoutes: Routes = [
-  { path: '', component: HomePageComponent},
-  { path: 'piano', component: PianoComponent},
-  { path: 'flat', component: FlatPageComponent},
+  { path: '', component: HomePageComponent },
+  { path: 'cemetary', component: CemetaryComponent },
+  { path: 'piano', component: PianoComponent },
+  { path: 'flat', component: FlatPageComponent },
   { path: 'color', component: ColorPageComponent },
+  { path: 'panel', component: ControlPanelComponent },
+  
   // pages
 ]
 
@@ -43,13 +51,18 @@ const appRoutes: Routes = [
     SliderComponent,
     ToggleComponent,
     PianoComponent,
+    ControlPanelComponent,
+    CemetaryComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
-
     BrowserModule,
     FormsModule,
     HttpModule,
+    // material: https://material.angular.io/guide/getting-started
+    // BrowserAnimationsModule,
+    NoopAnimationsModule,
+    MdButtonModule, MdCheckboxModule, MdSliderModule
   ],
   providers: [
      MIDIService,
