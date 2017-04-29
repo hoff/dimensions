@@ -403,6 +403,7 @@ class Keyboard {
     this.animation = animation
     this.makeNotes()
     this.placeNotes()
+    this.placeSpiral()
   }
 
 
@@ -422,6 +423,32 @@ class Keyboard {
 
       this.notes.push(note)
     }
+  }
+
+  placeSpiral() {
+    let planeHeight = 10
+
+    // 2D for now
+    
+
+    let planeGeo = new THREE.PlaneGeometry(1, 1)
+
+    // bottom left
+    planeGeo.vertices[0].set(0, 0, 0)
+    // bottom right
+    planeGeo.vertices[1].set(0, 0, 0)
+    // top left
+    planeGeo.vertices[2].set(-2.5, 10, 0)
+    // top right
+    planeGeo.vertices[3].set(2.5, 10, 0)
+
+
+    let planeMat = new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    planeMat.side = THREE.DoubleSide
+    let planeMesh = new THREE.Mesh(planeGeo, planeMat)
+    this.scene.add(planeMesh)
+    
+
   }
 
   placeNotes() {
