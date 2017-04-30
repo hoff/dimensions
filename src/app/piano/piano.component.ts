@@ -392,6 +392,7 @@ class Keyboard {
   noteNames = ['A', 'Bb', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
   elements = []
+  clones = []
 
   constructor(
     public scene: THREE.Scene,
@@ -479,7 +480,7 @@ class Keyboard {
         y = 0
       } else {
         // everything else
-        let radians = degrees *  Math.PI / 180
+        let radians = degrees * Math.PI / 180
         x = Math.cos(radians) * distance
         y = Math.sin(radians) * distance
       }
@@ -490,7 +491,7 @@ class Keyboard {
       mat.opacity = 0.2
       let mesh = new THREE.Mesh(geo, mat)
       mesh.position.set(x, y, 0)
-      mesh.rotation.z =  degrees *  Math.PI / 180 // the curent radian
+      mesh.rotation.z = degrees * Math.PI / 180 // the curent radian
       mesh.position.z = i * 0.05
       mesh.visible = true
 
@@ -501,18 +502,26 @@ class Keyboard {
       degrees += 30
       distance += 0.1
 
-      this.midi.stream.filter(msg => msg.name === 'keydown').subscribe(msg => {
-        let element = this.elements[msg.key - 17]
-        element.material.opacity = 1
-      })
-      this.midi.stream.filter(msg => msg.name === 'keyup').subscribe(msg => {
-        let element = this.elements[msg.key - 17]
-        element.material.opacity = 0.2
-      })
-
-
     }
 
+    this.midi.stream.filter(msg => msg.name === 'keydown').subscribe(msg => {
+      let element = this.elements[msg.key - 17]
+      element.material.opacity = 1
+      let clone = element.clone()
+      clone.position.z -= 1
+      this.scene.add(clone)
+      this.clones.push(clone)
+    })
+    this.midi.stream.filter(msg => msg.name === 'keyup').subscribe(msg => {
+      let element = this.elements[msg.key - 17]
+      element.material.opacity = 0.2
+    })
+
+    this.animation.beforeRenderStream.subscribe(dims => {
+      for (let clone of this.clones) {
+        clone.position.z -= 0.01
+      }
+    })
 
   }
 
