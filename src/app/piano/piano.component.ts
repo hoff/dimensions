@@ -56,24 +56,24 @@ export class PianoComponent implements AfterViewInit {
   warnings = []
 
   dimensions = {
-        gravity: 0.0,
-        zSpeed: -0.1,
-        kick: 0,
-        box: {
-          width: 5,
-          height: 4,
-          depth: 2.4,
-          rotationX: 0.01,
-          rotationY: 0.00,
-          rotationZ: 0.00,
-          fadeSpeed: 0.001,
-        },
-        lights: {
-          directional: {
-            intensity: 0.8,
-          }
-        }
+    gravity: 0.0,
+    zSpeed: -0.1,
+    kick: 0,
+    box: {
+      width: 5,
+      height: 4,
+      depth: 2.4,
+      rotationX: 0.01,
+      rotationY: 0.00,
+      rotationZ: 0.00,
+      fadeSpeed: 0.001,
+    },
+    lights: {
+      directional: {
+        intensity: 0.8,
       }
+    }
+  }
 
   constructor(
     public midi: MIDIService,
@@ -391,6 +391,8 @@ class Keyboard {
   notes = []
   noteNames = ['A', 'Bb', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
+  elements = []
+
   constructor(
     public scene: THREE.Scene,
     public name: string,
@@ -403,6 +405,8 @@ class Keyboard {
     this.animation = animation
     this.makeNotes()
     this.placeNotes()
+
+    // new!
     this.placeSpiral()
   }
 
@@ -429,7 +433,7 @@ class Keyboard {
     let planeHeight = 10
 
     // 2D for now
-    
+
 
     let planeGeo = new THREE.PlaneGeometry(1, 1)
 
@@ -447,7 +451,68 @@ class Keyboard {
     planeMat.side = THREE.DoubleSide
     let planeMesh = new THREE.Mesh(planeGeo, planeMat)
     this.scene.add(planeMesh)
-    
+
+    let noteCount = 88
+
+    let degrees = 0
+    let distance = 1
+    for (let i = 0; i < noteCount; i++) {
+
+      let x: number
+      let y: number
+
+      if (degrees % 360 === 90) {
+        // 12 //
+        x = 0
+        y = distance
+      } else if (degrees % 360 === 270) {
+        // 6 //
+        x = 0
+        y = -distance
+      } else if (degrees % 360 === 0) {
+        // 3 //
+        x = distance
+        y = 0
+      } else if (degrees % 360 === 180) {
+        // 9 //
+        x = -distance
+        y = 0
+      } else {
+        // everything else
+        let radians = degrees *  Math.PI / 180
+        x = Math.cos(radians) * distance
+        y = Math.sin(radians) * distance
+      }
+
+      // place test!
+      let geo = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+      let mat = new THREE.MeshPhongMaterial({ color: 0xff0000, transparent: true })
+      mat.opacity = 0.2
+      let mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(x, y, 0)
+      mesh.rotation.z =  degrees *  Math.PI / 180 // the curent radian
+      mesh.position.z = i * 0.05
+      mesh.visible = true
+
+      this.elements.push(mesh)
+      this.scene.add(mesh)
+
+      // increase angle and distance
+      degrees += 30
+      distance += 0.1
+
+      this.midi.stream.filter(msg => msg.name === 'keydown').subscribe(msg => {
+        let element = this.elements[msg.key - 17]
+        element.material.opacity = 1
+      })
+      this.midi.stream.filter(msg => msg.name === 'keyup').subscribe(msg => {
+        let element = this.elements[msg.key - 17]
+        element.material.opacity = 0.2
+      })
+
+
+    }
+
 
   }
 
@@ -605,8 +670,8 @@ class Note {
         vessel.velocity.z = this.dimensions.zSpeed
 
 
-
-        this.scene.add(vessel.vesselMesh)
+        // not firing at the moment
+        // this.scene.add(vessel.vesselMesh)
 
         if (this.color === 'white') {
           this.baseMesh.rotateX(0.1)
@@ -744,7 +809,7 @@ class Vessel {
 
       // rotate
       this.vesselMesh.rotation.x += dimensions.box.rotationX / 10
-      this.vesselMesh.rotation.y += dimensions.box.rotationY / 10 
+      this.vesselMesh.rotation.y += dimensions.box.rotationY / 10
       this.vesselMesh.rotation.z += dimensions.box.rotationZ / 10
 
 
