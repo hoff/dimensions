@@ -266,7 +266,7 @@ export class PianoComponent implements AfterViewInit {
     this.controls.autoRotate = true
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
-    this.controls.autoRotateSpeed = 0.5
+    this.controls.autoRotateSpeed = 0
     //this.controls.autoRotate = false
 
 
@@ -487,7 +487,13 @@ class Keyboard {
 
       // place test!
       let geo = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+
+      let hslaKeys = Object.keys(HSLAs)
+      let key = hslaKeys[i % 12]
+      let hsla = HSLAs[key]
+
       let mat = new THREE.MeshPhongMaterial({ color: 0xff0000, transparent: true })
+      mat.color.setHSL(hsla.h, hsla.s, hsla.l)
       mat.opacity = 0.2
       let mesh = new THREE.Mesh(geo, mat)
       mesh.position.set(x, y, 0)
