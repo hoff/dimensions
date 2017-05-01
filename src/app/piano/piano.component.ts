@@ -393,6 +393,8 @@ class Keyboard {
 
   elements = []
   clones = []
+  vertices: THREE.Vector2[] = []
+  planes = []
 
   constructor(
     public scene: THREE.Scene,
@@ -436,7 +438,7 @@ class Keyboard {
     // 2D for now
 
 
-    let planeGeo = new THREE.PlaneGeometry(1, 1)
+    /*let planeGeo = new THREE.PlaneGeometry(1, 1)
 
     // bottom left
     planeGeo.vertices[0].set(0, 0, 0)
@@ -451,9 +453,10 @@ class Keyboard {
     let planeMat = new THREE.MeshPhongMaterial({ color: 0xff0000 })
     planeMat.side = THREE.DoubleSide
     let planeMesh = new THREE.Mesh(planeGeo, planeMat)
-    this.scene.add(planeMesh)
+    this.scene.add(planeMesh)*/
 
-    let noteCount = 88
+    // vector count, to be precies
+    let noteCount = 120
 
     let degrees = 0
     let distance = 1
@@ -496,7 +499,10 @@ class Keyboard {
       mat.color.setHSL(hsla.h, hsla.s, hsla.l)
       mat.opacity = 0.2
       let mesh = new THREE.Mesh(geo, mat)
+
       mesh.position.set(x, y, 0)
+      this.vertices.push(new THREE.Vector2(x, y))
+
       mesh.rotation.z = degrees * Math.PI / 180 // the curent radian
       mesh.position.z = i * 0.05
       mesh.visible = true
@@ -510,6 +516,41 @@ class Keyboard {
 
     }
 
+    // make planes between vertices
+    for (let i = 0; i < this.vertices.length - 14; i++) {
+
+      let v1 = this.vertices[i]
+      let v2 = this.vertices[i + 1]
+      let v3 = this.vertices[i + 12]
+      let v4 = this.vertices[i + 13]
+
+      let planeGeo = new THREE.PlaneGeometry(1, 1)
+      // bottom left
+      planeGeo.vertices[0].set(v1.x, v1.y, 0)
+      // bottom right
+      planeGeo.vertices[1].set(v2.x, v2.y, 0)
+      // top left
+      planeGeo.vertices[2].set(v3.x, v3.y, 0)
+      // top right
+      planeGeo.vertices[3].set(v4.x, v4.y, 0)
+
+
+      let planeMat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
+
+      let hslaKeys = Object.keys(HSLAs)
+      let key = hslaKeys[i % 12]
+      let hsla = HSLAs[key]
+
+      planeMat.color.setHSL(hsla.h, hsla.s, hsla.l)
+
+      planeMat.opacity = 0.2
+      planeMat.side = THREE.DoubleSide
+      let planeMesh = new THREE.Mesh(planeGeo, planeMat)
+      this.scene.add(planeMesh)
+      this.planes.push(planeMesh)
+
+    }
+
     this.midi.stream.filter(msg => msg.name === 'keydown').subscribe(msg => {
       let element = this.elements[msg.key - 17]
       element.material.opacity = 1
@@ -517,10 +558,19 @@ class Keyboard {
       clone.position.z -= 1
       this.scene.add(clone)
       this.clones.push(clone)
+
+      // highlight plane
+      let plane = this.planes[msg.key - 17]
+      plane.material.opacity = 1
+
     })
     this.midi.stream.filter(msg => msg.name === 'keyup').subscribe(msg => {
       let element = this.elements[msg.key - 17]
       element.material.opacity = 0.2
+
+      // unhighlight plane
+      let plane = this.planes[msg.key - 17]
+      plane.material.opacity = 0.2
     })
 
     this.animation.beforeRenderStream.subscribe(dims => {
