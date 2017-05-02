@@ -154,6 +154,12 @@ export class PianoComponent implements AfterViewInit {
     this.midi.stream.filter(msg => msg.keyName === 'R3').subscribe(msg => {
       this.camera.position.z = (msg.decimal * 200) - 100
     })
+    this.midi.stream.filter(msg => msg.keyName === 'R4').subscribe(msg => {
+      // not working
+      this.camera.rotateZ(msg.decimal)
+      this.camera.rotateOnAxis(new THREE.Vector3(1, 2, 3), 0.5)
+      console.log(this.camera.rotation.z)
+    })
     // load preset
     this.midi.stream.filter(msg => msg.keyName === 'B1').subscribe(msg => {
       this.dimensions = {
@@ -273,7 +279,7 @@ export class PianoComponent implements AfterViewInit {
     // lights
 
     this.directional = new THREE.DirectionalLight(0xFFFFFF, 1)
-    this.directional.position.set(2, 10, 7);
+    this.directional.position.set(2, 20, -20);
     this.directional.target.position.set(0, 0, 0);
     this.directional.castShadow = true;
     this.directional.shadow.radius = 0.5;
@@ -391,10 +397,9 @@ class Keyboard {
   notes = []
   noteNames = ['A', 'Bb', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
-  elements = []
-  clones = []
   vertices: THREE.Vector2[] = []
-  planes = []
+  boxes: THREE.Mesh[] = []
+  copies: THREE.Mesh[] = []
 
   constructor(
     public scene: THREE.Scene,
@@ -435,32 +440,12 @@ class Keyboard {
   placeSpiral() {
     let planeHeight = 10
 
-    // 2D for now
-
-
-    /*let planeGeo = new THREE.PlaneGeometry(1, 1)
-
-    // bottom left
-    planeGeo.vertices[0].set(0, 0, 0)
-    // bottom right
-    planeGeo.vertices[1].set(0, 0, 0)
-    // top left
-    planeGeo.vertices[2].set(-2.5, 10, 0)
-    // top right
-    planeGeo.vertices[3].set(2.5, 10, 0)
-
-
-    let planeMat = new THREE.MeshPhongMaterial({ color: 0xff0000 })
-    planeMat.side = THREE.DoubleSide
-    let planeMesh = new THREE.Mesh(planeGeo, planeMat)
-    this.scene.add(planeMesh)*/
-
-    // vector count, to be precies
-    let noteCount = 120
+    // 2D spiral vectors
+    let vectorCount = 120
 
     let degrees = 0
     let distance = 1
-    for (let i = 0; i < noteCount; i++) {
+    for (let i = 0; i < vectorCount; i++) {
 
       let x: number
       let y: number
@@ -488,7 +473,7 @@ class Keyboard {
         y = Math.sin(radians) * distance
       }
 
-      // place test!
+      // Boxes at position, for debugging
       let geo = new THREE.BoxGeometry(0.5, 0.5, 0.5)
 
       let hslaKeys = Object.keys(HSLAs)
@@ -507,16 +492,15 @@ class Keyboard {
       mesh.position.z = i * 0.05
       mesh.visible = true
 
-      this.elements.push(mesh)
       this.scene.add(mesh)
 
       // increase angle and distance
       degrees += 30
-      distance += 0.1
+      distance += (0.1 - (i * 0.001)) // reduce over time
 
     }
 
-    // make planes between vertices
+    // make boxes between vertices
     for (let i = 0; i < this.vertices.length - 14; i++) {
 
       let v1 = this.vertices[i]
@@ -524,58 +508,101 @@ class Keyboard {
       let v3 = this.vertices[i + 12]
       let v4 = this.vertices[i + 13]
 
-      let planeGeo = new THREE.PlaneGeometry(1, 1)
-      // bottom left
-      planeGeo.vertices[0].set(v1.x, v1.y, 0)
-      // bottom right
-      planeGeo.vertices[1].set(v2.x, v2.y, 0)
-      // top left
-      planeGeo.vertices[2].set(v3.x, v3.y, 0)
-      // top right
-      planeGeo.vertices[3].set(v4.x, v4.y, 0)
 
-
-      let planeMat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
-
+      // consider making a box, and just update the vertices.
       let hslaKeys = Object.keys(HSLAs)
       let key = hslaKeys[i % 12]
       let hsla = HSLAs[key]
 
-      planeMat.color.setHSL(hsla.h, hsla.s, hsla.l)
+      let boxGeo = new THREE.BoxGeometry(3, 3, 3)
+      // bottom left, front and back
+      boxGeo.vertices[7].set(v1.x, v1.y, 0)
+      boxGeo.vertices[6].set(v1.x, v1.y, -1)
+      // bottom right, front and back
+      boxGeo.vertices[2].set(v2.x, v2.y, 0)
+      boxGeo.vertices[3].set(v2.x, v2.y, -1)
+      // top left, front and back
+      boxGeo.vertices[5].set(v3.x, v3.y, 0)
+      boxGeo.vertices[4].set(v3.x, v3.y, -1)
+      // top right, front and back
+      boxGeo.vertices[0].set(v4.x, v4.y, 0)
+      boxGeo.vertices[1].set(v4.x, v4.y, -1)
 
-      planeMat.opacity = 0.2
-      planeMat.side = THREE.DoubleSide
-      let planeMesh = new THREE.Mesh(planeGeo, planeMat)
-      this.scene.add(planeMesh)
-      this.planes.push(planeMesh)
+      let boxMat = new THREE.MeshPhongMaterial({ color: randomColor() })
+      boxMat.color.setHSL(hsla.h, hsla.s, hsla.l + (i / 300))
+      boxMat.side = THREE.DoubleSide
+      let boxMesh = new THREE.Mesh(boxGeo, boxMat)
+      this.boxes.push(boxMesh)
+      //this.scene.add(boxMesh)
 
     }
 
-    this.midi.stream.filter(msg => msg.name === 'keydown').subscribe(msg => {
-      let element = this.elements[msg.key - 17]
-      element.material.opacity = 1
-      let clone = element.clone()
-      clone.position.z -= 1
-      this.scene.add(clone)
-      this.clones.push(clone)
 
-      // highlight plane
-      let plane = this.planes[msg.key - 17]
-      plane.material.opacity = 1
+    this.midi.stream.filter(msg => msg.name === 'keydown').subscribe(msg => {
+
+      // make a new box, simple cloning first
+      let box = this.boxes[msg.key - 17]
+      let bg: any = box.geometry
+      let bgvs = bg.vertices
+
+      let boxGeo = new THREE.BoxGeometry(1, 1, 1)
+      for (let i = 0; i < bgvs.length; i++) {
+        boxGeo.vertices[i] = bgvs[i]
+      }
+      let mat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
+      mat.side = THREE.DoubleSide
+
+      let hslaKeys = Object.keys(HSLAs)
+      let key = hslaKeys[msg.key % 12]
+      let hsla = HSLAs[key]
+
+      let i = msg.key - 33
+      mat.color.setHSL(hsla.h, hsla.s, hsla.l + (i / 300) - 0.2)
+
+      let glow = new THREE.Color()
+      glow.setHSL(hsla.h, hsla.s, hsla.l - 0.2)
+      glow.setHSL(1, 0, 0.7)
+      mat.emissive = glow
+
+
+      let mesh = new THREE.Mesh(boxGeo, mat)
+      this.scene.add(mesh)
+
+      // this is fucking gold
+      mesh.scale.set(msg.velocity + 2, msg.velocity + 2, msg.velocity)
+      this.copies.push(mesh)
+
 
     })
     this.midi.stream.filter(msg => msg.name === 'keyup').subscribe(msg => {
-      let element = this.elements[msg.key - 17]
-      element.material.opacity = 0.2
 
-      // unhighlight plane
-      let plane = this.planes[msg.key - 17]
-      plane.material.opacity = 0.2
     })
 
-    this.animation.beforeRenderStream.subscribe(dims => {
-      for (let clone of this.clones) {
-        clone.position.z -= 0.01
+    this.animation.beforeRenderStream.subscribe(dimensions => {
+      for (let copy of this.copies) {
+
+        let cp: any = copy
+
+        cp.position.z -= 0.03
+        cp.material.opacity -= 0.01
+
+
+        cp.material.opacity -= dimensions.box.fadeSpeed / 30
+
+
+        let h = cp.material.emissive.getHSL().h
+        let s = cp.material.emissive.getHSL().s
+        let l = cp.material.emissive.getHSL().l - 0.05
+
+        let co: Color = cp.material.emissive
+        co.setHSL(h, s, l)
+        cp.material.needsUpdate = true
+
+        if (cp.material.opacity < 0) {
+          let myindex = this.copies.indexOf(copy)
+          this.copies.splice(myindex, 1)
+          console.log(this.copies.length)
+        }
       }
     })
 
