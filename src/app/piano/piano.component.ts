@@ -569,7 +569,8 @@ class Keyboard {
       this.scene.add(mesh)
 
       // this is fucking gold
-      mesh.scale.set(msg.velocity + 2, msg.velocity + 2, msg.velocity)
+      // mesh.scale.set(msg.velocity + 1, msg.velocity + 1, msg.velocity)
+      mesh.userData.velocity = msg.velocity
       this.copies.push(mesh)
 
 
@@ -588,6 +589,11 @@ class Keyboard {
 
 
         cp.material.opacity -= dimensions.box.fadeSpeed / 30
+
+        // increase scale according to velocity
+        let currentScale = copy.scale.x
+        let nextScale = currentScale += (copy.userData.velocity / 100)
+        copy.scale.set(nextScale, nextScale, nextScale)
 
 
         let h = cp.material.emissive.getHSL().h
