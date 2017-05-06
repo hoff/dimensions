@@ -1,3 +1,7 @@
+<video autoplay="true" id="videoElement" #videoElement style="width: 100vw; height: 100vh; transform: scaleX(-1);">
+     
+</video>
+
 <div style="display: none; position:absolute; top: 0; left: 0; width: 100%; height: 120vh; background: url(http://apod.nasa.gov/apod/image/0603/coma_misti.jpg) -80px -80px;
   color: red;
   -webkit-text-fill-color: transparent;
@@ -10,10 +14,11 @@
   margin: 50px auto;
   text-align: center;">
   hallo!</div>
-<div id="sceneContainer" #sceneContainer style="width: 100vw; height: 120vh;"></div>
+<div id="sceneContainer" #sceneContainer style="width: 100vw; height: 120vh; position: fixed; top: 0; left: 0;"></div>
 <div style="z-index:100; overflow-y: scroll; top: 0; left: 0; background: #000; color: white; position:fixed; width: 300px; padding: 30px; height: 100vh;">
 
-
+<button (click)="startWebcam()">start webcam</button>
+<button (click)="stopWebcam()">stop webcam</button>
 
 
 <button (click)="save('R5')">save config to R5</button>
@@ -38,6 +43,10 @@ keyboard: <input type="checkbox" [(ngModel)]="keyboard?.keyboardObject.visible" 
 </flex-row>
 
 <hr>
+out damping x {{ dimensions.outDamping }}
+<app-slider *ngIf="controls" [from]="-100" [to]="100" [step]="0.1" [val]="dimensions.outDamping"
+  (onChange)="dimensions.outDamping = $event"></app-slider>
+
 z speed x {{ dimensions.zSpeed }}
 <app-slider *ngIf="controls" [from]="-1" [to]="1" [step]="0.001" [val]="dimensions.zSpeed"
   (onChange)="dimensions.zSpeed = $event"></app-slider>

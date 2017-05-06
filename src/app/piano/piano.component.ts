@@ -6,6 +6,8 @@ import * as THREE from 'three'
 import OrbitControls from 'orbit-controls-es6'
 import { Color } from 'three'
 
+import { GPUParticleSystem } from '../gpuparticle-system'
+
 // Services
 import { MIDIService } from '../midi.service'
 import { AnimationService } from '../animation.service'
@@ -31,7 +33,10 @@ interface Light {
 export class PianoComponent implements AfterViewInit {
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
+  @ViewChild('videoElement') videoElement: ElementRef
 
+  // particle stuff
+  particleSystem
 
 
   // scene, camera, renderer
@@ -58,6 +63,7 @@ export class PianoComponent implements AfterViewInit {
   dimensions = {
     gravity: 0.0,
     zSpeed: -0.1,
+    outDamping: 50,
     kick: 0,
     box: {
       width: 5,
@@ -140,8 +146,63 @@ export class PianoComponent implements AfterViewInit {
     /** subscribe to knobs for camera */
     this.bindCamera()
 
+    // particle test
+    // this.particles()
+
     /** kick off animation loop */
     this.animate()
+
+
+  }
+
+  clock = new THREE.Clock()
+  tick = 0
+  options = {
+      position: new THREE.Vector3(),
+      positionRandomness: .3,
+      velocity: new THREE.Vector3(),
+      velocityRandomness: .5,
+      color: 0xff0000,
+      colorRandomness: .2,
+      turbulence: .5,
+      lifetime: 2,
+      size: 5,
+      sizeRandomness: 1
+    }
+    // options passed during each spawned
+    spawnerOptions = {
+      spawnRate: 15000,
+      horizontalSpeed: 1.5,
+      verticalSpeed: 1.33,
+      timeScale: 1
+    }
+
+  particles() {
+    this.particleSystem = new GPUParticleSystem()
+    this.scene.add(this.particleSystem);
+  }
+
+  startWebcam() {
+    /** video test */
+    let video = this.videoElement.nativeElement
+
+    navigator.getUserMedia = navigator.getUserMedia
+
+    if (navigator.getUserMedia) {
+      navigator.getUserMedia({ video: true }, handleVideo, videoError);
+    }
+
+    function handleVideo(stream) {
+      video.src = window.URL.createObjectURL(stream);
+    }
+
+    function videoError(e) {
+      // do something
+    }
+  }
+  stopWebcam() {
+    let video = this.videoElement.nativeElement
+    video.src = false
   }
 
   bindCamera() {
@@ -165,6 +226,7 @@ export class PianoComponent implements AfterViewInit {
       this.dimensions = {
         gravity: 0.0,
         zSpeed: -0.1,
+        outDamping: 50,
         kick: 1.2,
         box: {
           width: 1,
@@ -186,6 +248,7 @@ export class PianoComponent implements AfterViewInit {
       this.dimensions = {
         gravity: 0.1,
         zSpeed: -0.1,
+        outDamping: 50,
         kick: 1.2,
         box: {
           width: 6.8,
@@ -207,6 +270,7 @@ export class PianoComponent implements AfterViewInit {
       this.dimensions = {
         gravity: 0.0,
         zSpeed: -0.1,
+        outDamping: 50,
         kick: 0.2,
         box: {
           width: 5,
@@ -228,6 +292,7 @@ export class PianoComponent implements AfterViewInit {
       this.dimensions = {
         gravity: 0.0,
         zSpeed: -0.1,
+        outDamping: 50,
         kick: 0,
         box: {
           width: 5,
@@ -251,9 +316,9 @@ export class PianoComponent implements AfterViewInit {
     /** make a scene! */
     this.scene = new THREE.Scene()
 
-    this.renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true })
-    this.renderer.setClearColor(0xffffff, 1)
-    this.renderer.setClearColor(0x111111, 1)
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+    // this.renderer.setClearColor(0xffffff, 1)
+    this.renderer.setClearColor(0xffffff, 0.8)
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setSize(this.sceneContainer.nativeElement.scrollWidth, this.sceneContainer.nativeElement.scrollHeight)
@@ -378,6 +443,27 @@ export class PianoComponent implements AfterViewInit {
     // push current dimensions down the stream.
     this.animation.beforeRenderSource.next(this.dimensions)
 
+    // particle test!
+    /*let delta = this.clock.getDelta() * this.spawnerOptions.timeScale;
+    this.tick += delta;
+
+    if (this.tick < 0) {this.tick = 0}
+
+    if (delta > 0 ) {
+
+      this.options.position.x = 0 // Math.sin(this.tick * this.spawnerOptions.horizontalSpeed) * 20;
+      this.options.position.y = 0 // Math.sin(this.tick * 20) //0 //Math.sin(this.tick * this.spawnerOptions.verticalSpeed) * 10;
+      this.options.position.z = 0 //Math.sin(this.tick * this.spawnerOptions.horizontalSpeed + this.spawnerOptions.verticalSpeed) * 5;
+
+      for (var x = 0; x < this.spawnerOptions.spawnRate * delta; x++) {
+        // Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
+        // their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
+        this.particleSystem.spawnParticle(this.options);
+      }
+    }
+
+    this.particleSystem.update(this.tick);*/
+
     // repeat
     requestAnimationFrame(this.animate)
 
@@ -490,7 +576,7 @@ class Keyboard {
 
       mesh.rotation.z = degrees * Math.PI / 180 // the curent radian
       mesh.position.z = i * 0.05
-      mesh.visible = true
+      mesh.visible = false
 
       this.scene.add(mesh)
 
@@ -566,11 +652,12 @@ class Keyboard {
 
 
       let mesh = new THREE.Mesh(boxGeo, mat)
+      mesh.userData.velocity = msg.velocity
       this.scene.add(mesh)
+      mesh.rotateOnAxis(new THREE.Vector3(1, 2, 3), degreesToRadians(1))
 
       // this is fucking gold
       // mesh.scale.set(msg.velocity + 1, msg.velocity + 1, msg.velocity)
-      mesh.userData.velocity = msg.velocity
       this.copies.push(mesh)
 
 
@@ -579,20 +666,20 @@ class Keyboard {
 
     })
 
-    this.animation.beforeRenderStream.subscribe(dimensions => {
+    this.animation.beforeRenderStream.filter(dims => { return true }).subscribe(dimensions => {
       for (let copy of this.copies) {
 
         let cp: any = copy
 
-        cp.position.z -= 0.03
-        cp.material.opacity -= 0.01
+        cp.position.z += dimensions.zSpeed
+        // cp.material.opacity -= dimensions.fadeSpeed
 
 
         cp.material.opacity -= dimensions.box.fadeSpeed / 30
 
         // increase scale according to velocity
         let currentScale = copy.scale.x
-        let nextScale = currentScale += (copy.userData.velocity / 100)
+        let nextScale = currentScale += (copy.userData.velocity / dimensions.outDamping)
         copy.scale.set(nextScale, nextScale, nextScale)
 
 
@@ -607,9 +694,10 @@ class Keyboard {
         if (cp.material.opacity < 0) {
           let myindex = this.copies.indexOf(copy)
           this.copies.splice(myindex, 1)
-          console.log(this.copies.length)
+          this.scene.remove(copy)
         }
       }
+
     })
 
   }
@@ -888,7 +976,7 @@ class Vessel {
     let vesselMat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
 
     let hsla = HSLAs[note.name]
-    // vesselMat.color.setHSL(hsla.h, hsla.s, hsla.l)
+    vesselMat.color.setHSL(hsla.h, hsla.s, hsla.l)
 
     let glow = new THREE.Color()
     glow.setHSL(hsla.h, hsla.s, hsla.l - 0.2)
@@ -966,4 +1054,8 @@ const HSLAs = {
   'F#': { h: 0.38, s: 0.5, l: 0.71, a: 1 },
   'G': { h: -1, s: 0.59, l: 0.58333, a: 1 }, // fix to black
   'G#': { h: -0.9, s: 0.5, l: 0.666, a: 1 },
+}
+
+function degreesToRadians(degrees: number) {
+  return degrees * Math.PI / 180
 }
