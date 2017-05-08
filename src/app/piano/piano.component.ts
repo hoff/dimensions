@@ -527,7 +527,7 @@ class Keyboard {
     let planeHeight = 10
 
     // 2D spiral vectors
-    let vectorCount = 120
+    let vectorCount = 100
 
     let degrees = 0
     let distance = 1
@@ -581,8 +581,10 @@ class Keyboard {
       this.scene.add(mesh)
 
       // increase angle and distance
-      degrees += 30
-      distance += (0.1 - (i * 0.001)) // reduce over time
+      degrees += 137
+      //distance += (0.1 - (i * 0.001)) // reduce over time
+      distance += (0.1 - (i * 0.00115)) // reduce over time
+      
 
     }
 
@@ -619,7 +621,7 @@ class Keyboard {
       boxMat.side = THREE.DoubleSide
       let boxMesh = new THREE.Mesh(boxGeo, boxMat)
       this.boxes.push(boxMesh)
-      //this.scene.add(boxMesh)
+      this.scene.add(boxMesh)
 
     }
 
@@ -680,7 +682,7 @@ class Keyboard {
         // increase scale according to velocity
         let currentScale = copy.scale.x
         let nextScale = currentScale += (copy.userData.velocity / dimensions.outDamping)
-        copy.scale.set(nextScale, nextScale, nextScale)
+        copy.scale.set(1, 1, nextScale)
 
 
         let h = cp.material.emissive.getHSL().h
