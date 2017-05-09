@@ -335,7 +335,7 @@ export class PianoComponent implements AfterViewInit {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enabled = true;
     this.controls.autoRotate = true
-    this.controls.maxDistance = 1500;
+    this.controls.maxDistance = 15000;
     this.controls.minDistance = 0;
     this.controls.autoRotateSpeed = 0
     //this.controls.autoRotate = false
@@ -487,6 +487,8 @@ class Keyboard {
   boxes: THREE.Mesh[] = []
   copies: THREE.Mesh[] = []
 
+  spiral: THREE.Object3D
+
   constructor(
     public scene: THREE.Scene,
     public name: string,
@@ -523,11 +525,22 @@ class Keyboard {
     }
   }
 
-  placeSpiral() {
+  placeSpiral(vectorCount: number = 0) {
+
+    for (let thing of this.scene.children) {
+      if (thing.userData.toRemove === true) {
+        console.log('removing', thing)
+        this.scene.remove(thing)
+      }
+    }
+
+    let spiral = new THREE.Object3D()
+    spiral.userData.toRemove = true
+
     let planeHeight = 10
 
     // 2D spiral vectors
-    let vectorCount = 100
+    // let vectorCount = 100
 
     let degrees = 0
     let distance = 1
@@ -575,7 +588,7 @@ class Keyboard {
       this.vertices.push(new THREE.Vector2(x, y))
 
       mesh.rotation.z = degrees * Math.PI / 180 // the curent radian
-      mesh.position.z = i * 0.05
+      mesh.position.z = i * 0.1
       mesh.visible = false
 
       this.scene.add(mesh)
@@ -603,25 +616,29 @@ class Keyboard {
       let hsla = HSLAs[key]
 
       let boxGeo = new THREE.BoxGeometry(3, 3, 3)
+      let zExtra = i * 0.1
       // bottom left, front and back
-      boxGeo.vertices[7].set(v1.x, v1.y, 0)
-      boxGeo.vertices[6].set(v1.x, v1.y, -1)
+      boxGeo.vertices[7].set(v1.x, v1.y, 0 + zExtra)
+      boxGeo.vertices[6].set(v1.x, v1.y, -1 + zExtra)
       // bottom right, front and back
-      boxGeo.vertices[2].set(v2.x, v2.y, 0)
-      boxGeo.vertices[3].set(v2.x, v2.y, -1)
+      boxGeo.vertices[2].set(v2.x, v2.y, 0 + zExtra)
+      boxGeo.vertices[3].set(v2.x, v2.y, -1 + zExtra)
       // top left, front and back
-      boxGeo.vertices[5].set(v3.x, v3.y, 0)
-      boxGeo.vertices[4].set(v3.x, v3.y, -1)
+      boxGeo.vertices[5].set(v3.x, v3.y, 0 + zExtra)
+      boxGeo.vertices[4].set(v3.x, v3.y, -1 + zExtra)
       // top right, front and back
-      boxGeo.vertices[0].set(v4.x, v4.y, 0)
-      boxGeo.vertices[1].set(v4.x, v4.y, -1)
+      boxGeo.vertices[0].set(v4.x, v4.y, 0 + zExtra)
+      boxGeo.vertices[1].set(v4.x, v4.y, -1 + zExtra)
 
-      let boxMat = new THREE.MeshPhongMaterial({ color: randomColor() })
-      boxMat.color.setHSL(hsla.h, hsla.s, hsla.l + (i / 300))
+      let boxMat = new THREE.MeshPhongMaterial({ color: randomColor(), transparent: true })
+      boxMat.opacity = 0.5
+      boxMat.color.setHSL(hsla.h, hsla.s, hsla.l + (i / 30000))
       boxMat.side = THREE.DoubleSide
       let boxMesh = new THREE.Mesh(boxGeo, boxMat)
       this.boxes.push(boxMesh)
-      this.scene.add(boxMesh)
+
+      spiral.add(boxMesh)
+      //this.scene.add(boxMesh)
 
     }
 
@@ -701,6 +718,8 @@ class Keyboard {
       }
 
     })
+
+    this.scene.add(spiral)
 
   }
 

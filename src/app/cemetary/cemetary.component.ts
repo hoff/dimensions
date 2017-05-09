@@ -19,7 +19,7 @@ export class CemetaryComponent implements OnInit, AfterViewInit {
   camera: THREE.PerspectiveCamera
   controls: THREE.OrbitControls
 
-  composer: THREE.EffectComposer
+  // composer: THREE.EffectComposer
 
   // lights
   directional: THREE.DirectionalLight
@@ -104,13 +104,11 @@ export class CemetaryComponent implements OnInit, AfterViewInit {
     this.dam.add(planeMesh)
 
     // composer
-    console.log(THREE.EffectComposer)
+    // console.log(THREE.EffectComposer)
     //this.composer = new THREE.EffectComposer(this.renderer)
 
     // passes
-    let sup = THREE.CopyShader
-    let rp = THREE.RenderPass
-    let sp = THREE.ShaderPass
+   
 
 
     // box
