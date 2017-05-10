@@ -2,10 +2,11 @@
   <div #sidebar style="display:flex; background-color: #111; color: white; box-sizing: border-box; overflow: hidden;" [style.width.px]="sidebarVisible ? sidebarWidth : 0">
     <div #sidebarContent style="padding: 20px; height: 100vh; overflow-y: scroll;">
       
-        <button (click)="clear()">clear scene</button>
+        grow over time:
+      <app-slider [from]="0" [to]="50" [step]="1" (onChange)="growPetals($event)"></app-slider>
 
         vertices:
-      <app-slider [from]="20" [to]="1000" [step]="1" (onChange)="makeFlower($event)"></app-slider>
+      <app-slider [from]="0" [to]="500" [step]="1" (onChange)="makeFlower($event)"></app-slider>
         
       
       <app-slider *ngIf="testbox" [xyz]="'x'" [from]="0" [to]="10" [step]="0.01" (onChange)="testbox.scale.set($event, $event, $event) "></app-slider>
