@@ -1,10 +1,14 @@
 import { Component, OnInit, AfterViewInit, ViewChild, AfterViewChecked, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 
 import { Observable } from 'rxjs/Observable'
+import { Subject } from 'rxjs/Subject'
 
 // THREE
 import * as THREE from 'three'
 import OrbitControls from 'orbit-controls-es6'
+
+// Services
+import { MIDIService } from '../midi.service'
 
 // Light interfaces
 interface Light {
@@ -44,6 +48,8 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
   // petal container
   petals: Petal[] = []
 
+  subject: Subject<any>
+
   window = window
   sidebarWidth = 300
 
@@ -56,16 +62,22 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
     directionals: [
       {
         name: 'sun',
+        position: { x: 1, y: 10, z: 10 },
+        color: 0xffffff,
+        intensity: 0.7,
+      },
+      {
+        name: 'moon',
         position: { x: 1, y: 10, z: -10 },
         color: 0xffffff,
-        intensity: 1,
+        intensity: 0.3,
       },
     ],
     ambients: [
       {
         name: 'daylight',
         color: 0xffffff,
-        intensity: 0.4,
+        intensity: 0.1,
       }
     ],
     spots: [
@@ -78,15 +90,22 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
   }
 
   dimensions = {
+    running: true,
+    time: 10000,
     lights: this.lights,
+    zTest: 3,
     renderer: {
       opacity: 0.5
     }
   }
 
+
+
   sidebarVisible = true
 
-  constructor() {
+  constructor(
+    public midi: MIDIService,
+  ) {
 
     /**
      * Subscribe to keyboard events
@@ -103,17 +122,23 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
         this.requestFullscreen()
       }
     })
+
+    /**
+     * create observable dimensions subject
+     */
+    this.subject = new Subject()
   }
 
-
-
+  /**
+   * Setup Scene and add resize listener
+   */
   ngAfterViewInit() {
     this.sceneSetup(this.dimensions)
     window.addEventListener('resize', this.onWindowResize, false);
   }
 
   ngAfterViewChecked() {
-    //console.log('view checked')
+    // console.log('view checked')
   }
 
   onWindowResize = () => {
@@ -186,7 +211,8 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
     }
 
     // test
-    let mat = new THREE.MeshPhongMaterial({ color: 0xff0000 })
+    let mat = new THREE.MeshPhongMaterial({ color: 0xff0000, transparent: true })
+    mat.opacity = 0.2
     let geo = new THREE.BoxGeometry(1, 1, 1)
     this.testbox = new THREE.Mesh(geo, mat)
     this.testbox.visible = true
@@ -199,101 +225,38 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
       let mesh = new THREE.Mesh(geo, mat)
       mesh.position.x = i * 1.1
       mesh.visible = false
-      this.scene.add(mesh)
-    }
-    // this.makeFlower()
-
-    // try to make a petal!
-
-    for (let pCount = 1; pCount < 29; pCount ++) {
-      let petal = new Petal(this.scene, pCount * 137.5, 10 + (pCount * 0.5))
-      this.petals.push(petal)
+      // this.scene.add(mesh)
     }
 
-    
+
+    this.seed(88)
 
     this.animate()
   }
 
-  growPetals(time: number) {
-    for (let petal of this.petals) {
-      petal.growTo(time)
-    }
-  }
 
-  clearFlower() {
-    for (let thing of this.scene.children) {
-      if (thing.userData.flower === true) {
-        this.scene.remove(thing)
-      }
-    }
-  }
 
   /**
-   * degrees -> radians
-   */
-  toRadians(degrees: number) {
-    return degrees * Math.PI / 180
-  }
-
-  /**
-   * radians -> degrees
-   */
-  toDegrees(radians: number) {
-    return 180 * radians / Math.PI
-  }
-
-  /**
-   * Returns the 4 basic vertices of a Petal
-   * in the order: origin | left | right | outer
+   * create a number of petal seeds, with increasing 'appear at' times
    * 
-   * @param degrees The angle the petal points towards
-   * @param distance The distance of the petal's outer edge
+   * @param count 
    */
-  petalVertices(degrees: number, distance: number, tempz: number) {
+  seed(count) {
+    for (let p = 0; p < count; p++) {
 
-    // origin
-    let xOrigin, yOrigin, zOrigin = 0
+      let midiKey = p + 21
 
-    // the outer most edge
-    let x = this.cosine(degrees) * distance
-    let y = this.sine(degrees) * distance
-    let z = tempz
-
-    // leftie
-    let xLeft = this.cosine(degrees + 30) * (distance / 2)
-    let yLeft = this.sine(degrees + 30) * (distance / 2)
-    let zLeft = tempz
-
-    // rightie
-    let xRight = this.cosine(degrees - 30) * (distance / 2)
-    let yRight = this.sine(degrees - 30) * (distance / 2)
-    let zRight = tempz
-
-    return [
-      new THREE.Vector3(xOrigin, yOrigin, zOrigin),
-      new THREE.Vector3(xLeft, yLeft, zLeft),
-      new THREE.Vector3(xRight, yRight, zRight),
-      new THREE.Vector3(x, y, z),
-    ]
-  }
-
-  sine(degrees: number) {
-    return Math.sin(this.toRadians(degrees))
-  }
-  cosine(degrees: number) {
-    return Math.cos(this.toRadians(degrees))
-  }
-  tan(degrees: number) {
-    return Math.tan(this.toRadians(degrees))
-  }
-
-  randomColor() {
-    return Math.floor(Math.random() * 16777215)
+      let appearAfter = p * 100
+      let angle = 31
+      // angle = 137.5
+      // angle = 270
+      let petal = new Petal(this.midi, midiKey, this.subject, appearAfter, this.scene, p * angle + 0.1)
+      this.petals.push(petal)
+    }
   }
 
   makeBoxAt(x: number, y: number, z: number) {
-    let mat = new THREE.MeshPhongMaterial({ color: this.randomColor() })
+    let mat = new THREE.MeshPhongMaterial({ color: randomColor() })
     let geo = new THREE.BoxGeometry(1, 1, 1)
     let mesh = new THREE.Mesh(geo, mat)
     mesh.position.set(x, y, z)
@@ -301,93 +264,13 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
     return mesh
   }
 
-
-  /**
-   * create a flower with a given petal count
-   */
-  makeFlower(petalCount: number = 5, outFactor: number = 100) {
-
-    let flower = new THREE.Object3D()
-    flower.userData.flower = true
-
-    let startingDegrees = 1
-    let distance = 10
-
-    this.clearFlower()
-
-    for (let petalIndex = 0; petalIndex < petalCount; petalIndex++) {
-
-      // get the angle fo the petal
-      let currentAngle = startingDegrees + (137.508 * petalIndex)
-
-      // generate vertices for the petal // TODO: make outFactor (currently 100) a dimension
-      let currentDistance = (distance * petalIndex / outFactor) + distance
-      let vertices = this.petalVertices(currentAngle, currentDistance, petalIndex / 10)
-
-      // create a petal grouping object
-      let petal = new THREE.Object3D()
-
-      // create origin-to-center part
-      let originPlaneMat = new THREE.MeshPhongMaterial({ color: 0x123456, side: THREE.DoubleSide })
-
-      let originPlaneGeo = new THREE.Geometry()
-      originPlaneGeo.vertices.push(vertices[0])
-      originPlaneGeo.vertices.push(vertices[1])
-      originPlaneGeo.vertices.push(vertices[2])
-
-      originPlaneGeo.faces.push(new THREE.Face3(0, 1, 2))
-      originPlaneGeo.computeFaceNormals()
-
-      let originPlaneMesh = new THREE.Mesh(originPlaneGeo, originPlaneMat)
-
-      // add origin-to-center part to petal
-      petal.add(originPlaneMesh)
-
-
-      // 2
-
-
-      // create center-to-outer part
-      let outerPlaneMat = new THREE.MeshPhongMaterial({ color: this.randomColor(), side: THREE.DoubleSide })
-
-      let outerPlaneGeo = new THREE.Geometry()
-      outerPlaneGeo.vertices.push(vertices[1])
-      outerPlaneGeo.vertices.push(vertices[2])
-      outerPlaneGeo.vertices.push(vertices[3])
-
-      outerPlaneGeo.faces.push(new THREE.Face3(0, 1, 2))
-      outerPlaneGeo.computeFaceNormals()
-
-      let outerPlaneMesh = new THREE.Mesh(outerPlaneGeo, originPlaneMat)
-
-      // add center-to-outer part to petal
-      petal.add(outerPlaneMesh)
-
-      // add petal to flower
-      flower.add(petal)
-
-
-
-      // for debugging, make a box at each corner
-      for (let vertex of vertices) {
-        // this.makeBoxAt(vertex.x, vertex.y, vertex.z)
-      }
-
-      // add flower to scene
-      this.scene.add(flower)
-
-    }
-
-
-    for (let i = 0; i < 0; i++) {
-      // distance += (0.1 - (i * 0.001)) // reduce over time
-      distance += 0.1 - (i / 3000)
-
-    }
-  }
-
-
   animate = () => {
+
+    // forward time if running
+    this.dimensions.time += this.dimensions.running ? 15 : 0
+
+    // publish dimensions
+    this.subject.next(this.dimensions)
 
     // render
     this.renderer.render(this.scene, this.camera)
@@ -399,34 +282,72 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
 }
 // end of spiral component
 
+
+/**
+ * Petal
+ * 
+ * 
+ */
+
 export class Petal {
 
   planes: THREE.Object3D
+  originPlaneMesh: THREE.Mesh
+  outerPlaneMesh: THREE.Mesh
 
-  constructor(public scene: THREE.Scene, public angle: number = 1, public distance: number = 10, height: number = 10) {
-    this.makePlanes()
+  anglePercent: number
+
+  constructor(public midi: MIDIService, public midiKey: number, public subject, public appearAfter: number, public scene: THREE.Scene, public angle: number) {
+
+    let baseAngle = this.angle % 360
+    this.anglePercent = baseAngle / 360
+
+    // subscribe to dimensions (time is important here)
+    this.subject.subscribe(dimensions => {
+
+      this.updateVertices(dimensions)
+
+    })
+
+    // subscribe to MIDI!
+
+    this.midi.stream.filter(msg => msg.key === this.midiKey && msg.name === 'keyup').subscribe(msg => {
+      this.outerPlaneMesh.visible = false
+    })
+    this.midi.stream.filter(msg => msg.key === this.midiKey && msg.name === 'keydown').subscribe(msg => {
+      this.outerPlaneMesh.visible = true
+      console.log(msg.key)
+    })
+
   }
 
-  computeVertices() {
+  computeVertices(dimensions) {
 
-    let height = this.distance / -2
+    let age = dimensions.time - this.appearAfter
+    if (age < 0) {
+      return false
+    }
+
+    // TODO make typed dimensions
+    let height = 100 / age
+    let distance = age / 100 // distance increases by 1 every second
 
     // origin
     let xOrigin, yOrigin, zOrigin = 0
 
     // the outer most edge
-    let x = cosine(this.angle) * this.distance
-    let y = sine(this.angle) * this.distance
+    let x = cosine(this.angle) * distance
+    let y = sine(this.angle) * distance
     let z = height
 
     // leftie
-    let xLeft = cosine(this.angle + 30) * (this.distance / 2)
-    let yLeft = sine(this.angle + 30) * (this.distance / 2)
+    let xLeft = cosine(this.angle + 30) * (distance / 2)
+    let yLeft = sine(this.angle + 30) * (distance / 2)
     let zLeft = height / 2
 
     // rightie
-    let xRight = cosine(this.angle - 30) * (this.distance / 2)
-    let yRight = sine(this.angle - 30) * (this.distance / 2)
+    let xRight = cosine(this.angle - 30) * (distance / 2)
+    let yRight = sine(this.angle - 30) * (distance / 2)
     let zRight = height / 2
 
     return [
@@ -437,59 +358,70 @@ export class Petal {
     ]
   }
 
-  makePlanes() {
-    this.scene.remove(this.planes)
-    this.planes = new THREE.Object3D()
+  
 
-    // create origin-to-center part
-    let originPlaneMat = new THREE.MeshPhongMaterial({ color: 0x123456, side: THREE.DoubleSide })
+  
+  updateVertices(dimensions) {
 
-    let vertices = this.computeVertices()
+    // if we have not appeared yet, stop here
+    let age = dimensions.time - this.appearAfter
+    if (age < 0) {
+      return
+    }
 
-    let originPlaneGeo = new THREE.Geometry()
-    originPlaneGeo.vertices.push(vertices[0])
-    originPlaneGeo.vertices.push(vertices[1])
-    originPlaneGeo.vertices.push(vertices[2])
+    let vertices = this.computeVertices(dimensions)
 
-    originPlaneGeo.faces.push(new THREE.Face3(0, 1, 2))
-    originPlaneGeo.computeFaceNormals()
+    if (dimensions.running) {
+      this.scene.remove(this.originPlaneMesh)
+      this.scene.remove(this.outerPlaneMesh)
 
-    let originPlaneMesh = new THREE.Mesh(originPlaneGeo, originPlaneMat)
 
-    // add origin-to-center part to petal
-    this.planes.add(originPlaneMesh)
+      let originPlaneMat = new THREE.MeshPhongMaterial({ color: 0xff0000, side: THREE.DoubleSide })
+      originPlaneMat.color.setHSL(this.anglePercent, 0.8, 0.3)
 
-    // 2 //
+      // compute vertices
 
-    // create center-to-outer part
-    let outerPlaneMat = new THREE.MeshPhongMaterial({ color: 0x987654, side: THREE.DoubleSide })
+      // make plane (origin to center)
+      let originPlaneGeo = new THREE.Geometry()
+      originPlaneGeo.vertices.push(vertices[0])
+      originPlaneGeo.vertices.push(vertices[1])
+      originPlaneGeo.vertices.push(vertices[2])
 
-    let outerPlaneGeo = new THREE.Geometry()
-    outerPlaneGeo.vertices.push(vertices[1])
-    outerPlaneGeo.vertices.push(vertices[2])
-    outerPlaneGeo.vertices.push(vertices[3])
+      originPlaneGeo.faces.push(new THREE.Face3(0, 1, 2))
+      originPlaneGeo.computeFaceNormals()
 
-    outerPlaneGeo.faces.push(new THREE.Face3(0, 1, 2))
-    outerPlaneGeo.computeFaceNormals()
+      let originPlaneMesh = new THREE.Mesh(originPlaneGeo, originPlaneMat)
+      originPlaneMesh.visible = false
+      this.originPlaneMesh = originPlaneMesh
+      this.scene.add(originPlaneMesh)
 
-    let outerPlaneMesh = new THREE.Mesh(outerPlaneGeo, originPlaneMat)
+      // outer
+      // create center-to-outer plane
+      let outerPlaneMat = new THREE.MeshPhongMaterial({ color: 0x0000ff, side: THREE.DoubleSide })
+      outerPlaneMat.color.setHSL(this.anglePercent, 0.8, 0.5)
 
-    // add center-to-outer part to planes
-    this.planes.add(outerPlaneMesh)
+      let outerPlaneGeo = new THREE.Geometry()
+      outerPlaneGeo.vertices.push(vertices[1])
+      outerPlaneGeo.vertices.push(vertices[2])
+      outerPlaneGeo.vertices.push(vertices[3])
 
-    // add plane group to scene
-    this.scene.add(this.planes)
+      outerPlaneGeo.faces.push(new THREE.Face3(0, 1, 2))
+      outerPlaneGeo.computeFaceNormals()
+
+      let outerPlaneMesh = new THREE.Mesh(outerPlaneGeo, outerPlaneMat)
+      outerPlaneMesh.visible = false
+      this.outerPlaneMesh = outerPlaneMesh
+      this.scene.add(outerPlaneMesh)
+
+    }
   }
 
-  /** 
-   * determine the new distance
-   * re-calculate vertices
-   */
-  growTo(time: number) {
-    this.distance = time
-    this.makePlanes()
-  }
+} // END OF PETAL CLASS
 
+
+// HELPER FUNCTIONS
+export function randomColor() {
+  return Math.floor(Math.random() * 16777215)
 }
 
 export function sine(degrees: number) {

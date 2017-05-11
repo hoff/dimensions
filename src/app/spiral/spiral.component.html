@@ -1,15 +1,23 @@
 <flex-row id="screen" style="background: white;">
   <div #sidebar style="display:flex; background-color: #111; color: white; box-sizing: border-box; overflow: hidden;" [style.width.px]="sidebarVisible ? sidebarWidth : 0">
     <div #sidebarContent style="padding: 20px; height: 100vh; overflow-y: scroll;">
-      
-        grow over time:
-      <app-slider [from]="0" [to]="50" [step]="1" (onChange)="growPetals($event)"></app-slider>
 
-        vertices:
-      <app-slider [from]="0" [to]="500" [step]="1" (onChange)="makeFlower($event)"></app-slider>
-        
+      z test: {{ dimensions.zTest }}
+      <app-slider [from]="-10" [to]="100" [step]="0.01" (onChange)="dimensions.zTest = $event; subject.next(dimensions)"></app-slider>
       
-      <app-slider *ngIf="testbox" [xyz]="'x'" [from]="0" [to]="10" [step]="0.01" (onChange)="testbox.scale.set($event, $event, $event) "></app-slider>
+
+      time: {{ dimensions.time }}
+      <app-slider [from]="0" [to]="100000" [step]="1" (onChange)="dimensions.time = $event; subject.next(dimensions)"></app-slider>
+      
+
+      <button (click)="dimensions.running = !dimensions.running">start / stop</button>
+
+      <!-- songs! -->
+      <button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
+       <button (click)="midi.player.start()">play</button>
+      <button (click)="midi.player.stop()">stop</button>
+      
+      
     </div>
   </div>
   <div #sceneContainer style="display:flex; flex-grow: 1;" [style.height.vh]="100">
