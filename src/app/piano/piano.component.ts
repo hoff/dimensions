@@ -647,6 +647,9 @@ class Keyboard {
 
       // make a new box, simple cloning first
       let box = this.boxes[msg.key - 17]
+      if (!box) {
+        return
+      }
       let bg: any = box.geometry
       let bgvs = bg.vertices
 

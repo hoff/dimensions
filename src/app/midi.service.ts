@@ -5,6 +5,10 @@ import { Observable, Subscribable } from 'rxjs/Observable'
 import { Subscriber } from 'rxjs/Subscriber'
 import { Subject } from 'rxjs/Subject'
 
+// new parser
+import { MIDIParser } from './3rd/midi-parser'
+
+
 
 export interface MIDIMessage {
       control: string
@@ -83,6 +87,13 @@ export class MIDIService {
    * @param velocityDecimal the velocity between 0 and 1
    */
   soundNote(channel: number, key: number, velocityDecimal) {
+    console.log(MIDI)
+    let no = MIDI.noteOn
+    console.log('no?', no)
+    if (!MIDI.noteOn) {
+      console.warn('somehow, the MIDI instance (global thing, does not have note on, it is', MIDI)
+      return
+    }
     MIDI.noteOn(0, key, velocityDecimal * 127, 0)
   }
 
@@ -96,8 +107,15 @@ export class MIDIService {
      MIDI.noteOff(0, key, velocityDecimal)
   }
 
+  parsedMidi
+
   constructor(
   ) {
+
+    // new parser test
+    console.log('mega', MIDIParser)
+    this.parsedMidi = MIDIParser.Base64( this.songList[1].data)
+    console.log(this.parsedMidi)
 
     /**
      * create MIDI Stream

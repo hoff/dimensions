@@ -2,12 +2,20 @@
   <div #sidebar style="display:flex; background-color: #111; color: white; box-sizing: border-box; overflow: hidden;" [style.width.px]="sidebarVisible ? sidebarWidth : 0">
     <div #sidebarContent style="padding: 20px; height: 100vh; overflow-y: scroll;">
 
+      <button (click)="hero()">start hero</button>
+
+      yspeed
+      <app-slider [from]="-5" [to]="5" [step]="0.01" (onChange)="ySpeed = $event"></app-slider>
+
       z test: {{ dimensions.zTest }}
       <app-slider [from]="-10" [to]="100" [step]="0.01" (onChange)="dimensions.zTest = $event; subject.next(dimensions)"></app-slider>
       
 
       time: {{ dimensions.time }}
       <app-slider [from]="0" [to]="100000" [step]="1" (onChange)="dimensions.time = $event; subject.next(dimensions)"></app-slider>
+
+      field of view {{ camera?.fov }}
+       <app-slider *ngIf="camera" [from]="0" [to]="360" [step]="0.1" (onChange)="camera.fov = $event;"></app-slider>
       
 
       <button (click)="dimensions.running = !dimensions.running">start / stop</button>

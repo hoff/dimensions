@@ -24,10 +24,12 @@ import { ToggleComponent } from './toggle/toggle.component';
 import { PianoComponent } from './piano/piano.component';
 import { ControlPanelComponent } from './control-panel/control-panel.component';
 import { CemetaryComponent } from './cemetary/cemetary.component';
-import { SpiralComponent } from './spiral/spiral.component'
+import { SpiralComponent } from './spiral/spiral.component';
+import { HeroComponent } from './hero/hero.component'
 
 const appRoutes: Routes = [
   { path: '', component: PianoComponent },
+  { path: 'hero', component: HeroComponent },
   { path: 'spiral', component: SpiralComponent },  
   { path: 'cemetary', component: CemetaryComponent },
   { path: 'piano', component: PianoComponent },
@@ -56,6 +58,7 @@ const appRoutes: Routes = [
     ControlPanelComponent,
     CemetaryComponent,
     SpiralComponent,
+    HeroComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

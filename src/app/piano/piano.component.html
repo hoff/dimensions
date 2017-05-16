@@ -27,6 +27,8 @@
   <button (click)="midi.player.start()">play</button>
 <button (click)="midi.player.stop()">stop</button>
 
+
+
 <button *ngFor="let song of midi.songList" (click)="midi.playSong( song )">{{ song.name }}</button>
 
 keyboard: <input type="checkbox" [(ngModel)]="keyboard?.keyboardObject.visible" />

@@ -27,6 +27,21 @@ interface Spot {
   color: number
 }
 
+/**
+ * parameters used for creating a box
+ */
+interface BoxParams {
+  width?: number,
+  height?: number,
+  depth?: number,
+  x?: number,
+  y?: number,
+  z?: number,
+  visible?: boolean,
+  colorHSL?: {h: number, s: number, l: number},
+  add?: boolean,
+}
+
 @Component({
   selector: 'app-spiral',
   templateUrl: './spiral.component.html',
@@ -62,13 +77,13 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
     directionals: [
       {
         name: 'sun',
-        position: { x: 1, y: 10, z: 10 },
+        position: { x: 3, y: 10, z: 10 },
         color: 0xffffff,
         intensity: 0.7,
       },
       {
         name: 'moon',
-        position: { x: 1, y: 10, z: -10 },
+        position: { x: -3, y: 10, z: -10 },
         color: 0xffffff,
         intensity: 0.3,
       },
@@ -77,7 +92,7 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
       {
         name: 'daylight',
         color: 0xffffff,
-        intensity: 0.1,
+        intensity: 0.3,
       }
     ],
     spots: [
@@ -95,10 +110,12 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
     lights: this.lights,
     zTest: 3,
     renderer: {
-      opacity: 0.5
+      opacity: 1
     }
   }
 
+  heroBoxes = []
+  ySpeed = 0.5
 
 
   sidebarVisible = true
@@ -174,7 +191,7 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    this.renderer.setClearColor(0xffffee, dimensions.renderer.opacity)
+    this.renderer.setClearColor(0x111111, dimensions.renderer.opacity)
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setSize(this.sceneContainer.nativeElement.scrollWidth, this.sceneContainer.nativeElement.scrollHeight)
@@ -183,7 +200,7 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
     // camera
     this.camera = new THREE.PerspectiveCamera(40, this.sceneContainer.nativeElement.scrollWidth / this.sceneContainer.nativeElement.scrollHeight, 1, 10000)
     this.camera.position.z = 5
-    this.camera.fov = 60
+    this.camera.fov = 10
     this.camera.position.set(0, 17, 26)
 
     // controls
@@ -230,8 +247,20 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
 
 
     this.seed(88)
+    //this.doBudget()
+    // this.hero()
 
     this.animate()
+
+    this.midi.stream.subscribe(msg => {
+      console.log(msg)
+      let boxParams: BoxParams = {
+        width: 2,
+        x: msg.key - 70,
+      }
+      this.makeBox(boxParams)
+    })
+    
   }
 
 
@@ -254,17 +283,152 @@ export class SpiralComponent implements AfterViewInit, AfterViewChecked {
       this.petals.push(petal)
     }
   }
+  
+  /**
+   * Creates a box for, the way you like it...
+   * and adds it to the scene by default :)
+   */
+  makeBox(params: BoxParams) {
 
-  makeBoxAt(x: number, y: number, z: number) {
-    let mat = new THREE.MeshPhongMaterial({ color: randomColor() })
-    let geo = new THREE.BoxGeometry(1, 1, 1)
+    /** Read Params */
+
+    // size
+    const width  = params.width  || 1
+    const height = params.height || 1
+    const depth  = params.depth  || 1
+
+    // position
+    const x = params.x || 0
+    const y = params.y || 0
+    const z = params.z || 0
+
+    // color {hsl}
+    const hsl = params.colorHSL || {h: 0, s: 0, l: 1}
+
+    // add
+    const add = params.add || true
+
+    /** Create Box */
+
+    // material
+    const boxMaterial = new THREE.MeshPhongMaterial()
+    boxMaterial.color.setHSL(hsl.h, hsl.s, hsl.l)
+
+    // geometry
+    const boxGeometry = new THREE.BoxGeometry(width, width, width)
+
+    // mesh
+    const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial)
+    boxMesh.position.set(x, y, z)
+
+    // add 
+    if (add) {
+      this.scene.add(boxMesh)
+    }
+
+    return boxMesh
+  }
+
+  makeBoxAt(x: number, y: number, z: number, color?) {
+    
+    let mat = new THREE.MeshPhongMaterial({ })
+
+    if (color) {
+      mat.color.setHSL(color[0], color[1], color[2])
+    }
+
+    let geo = new THREE.BoxGeometry(1, 10, 1)
     let mesh = new THREE.Mesh(geo, mat)
     mesh.position.set(x, y, z)
     this.scene.add(mesh)
     return mesh
   }
 
+  doBudget() {
+    let offset = 0
+    let totalBudget = 0
+    let table = new THREE.Object3D()
+    for (let team of tables) {
+      totalBudget += team.budget
+      let texture = THREE.ImageUtils.loadTexture('/assets/teams/' + team.icon)
+
+      let mat = new THREE.MeshPhongMaterial({ color: 0xffffff, map: texture })
+      let geo = new THREE.BoxGeometry(1, 1, 1)
+      let mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(team.rank * 2.5, team.points / 2, 0)
+      let scale = nthRoot((team.budget / 20), 3)
+      mesh.scale.set(scale, scale, scale)
+      table.add(mesh)
+      // this.scene.add(mesh)
+      offset += scale + 1
+    }
+    let bbox = new THREE.Box3().setFromObject(table)
+    console.log(bbox)
+    let width = bbox.max.x - bbox.min.x
+    let height = bbox.max.y
+    table.position.setX(width / -2)
+    table.position.setY(height / -2)
+    this.scene.add(table)
+  }
+
+  /** piano hero test */
+  hero() {
+    let delta = 0
+    let midiData = this.midi.parsedMidi
+    if (!midiData) {
+      return
+    }
+    for (let event of midiData.track[0].event) {
+      delta += event.deltaTime / 10
+      if (event.type === 9) {
+        let decimal = (event.data[0] % 12) / 12
+        let hsl = [decimal, 1, 0.5]
+
+        /**
+         * the kings way of making a box!
+         */
+        let boxParams: BoxParams = {
+          width: 1, 
+          height: 1,
+          depth: 1,
+          x: event.data[0] * 10 / 3, // the midi key determines how far right
+          y: delta,                  // hight is time delay
+          colorHSL: {h: decimal, s: 1, l: 0.5}
+        }
+        let box = this.makeBox(boxParams)
+
+        box.userData.key = event.data[0]
+        box.userData.velocity = event.data[1]
+        box.userData.played = false
+        if (event.data[1] === 0)  {
+          box.visible = false
+        }
+        this.heroBoxes.push(box)
+      }
+    }
+  }
+
+  runHero = () => {
+    for (let box of this.heroBoxes) {
+      box.position.y -= this.ySpeed
+      if (box.position.y < 0 && box.userData.played === false) {
+        console.log('run hero has midi?', this.midi)
+        if (!this.midi.soundNote) {
+          console.warn('our midi service does not have soundNote method, strange')
+        } else {
+          this.midi.soundNote(0, box.userData.key, box.userData.velocity)
+
+        }
+        box.visible = false
+        box.userData.played = true
+      }
+    }
+  }
+
   animate = () => {
+
+    // run hero test
+    this.runHero()
 
     // forward time if running
     this.dimensions.time += this.dimensions.running ? 15 : 0
@@ -317,6 +481,8 @@ export class Petal {
     this.midi.stream.filter(msg => msg.key === this.midiKey && msg.name === 'keydown').subscribe(msg => {
       this.outerPlaneMesh.visible = true
       console.log(msg.key)
+      // test, working
+      // this.midi.soundNote(0, 50, 1)
     })
 
   }
@@ -358,9 +524,9 @@ export class Petal {
     ]
   }
 
-  
 
-  
+
+
   updateVertices(dimensions) {
 
     // if we have not appeared yet, stop here
@@ -449,3 +615,53 @@ export function toRadians(degrees: number) {
 export function toDegrees(radians: number) {
   return 180 * radians / Math.PI
 }
+
+/**
+ * nth root
+ */
+export function nthRoot(val: number, root: number) {
+  return Math.pow(val, 1 / root)
+}
+
+export const budgets = [
+  { team: 'FC Bayern München', budget: 566.15, icon: 'bayern.gif' },
+  { team: 'Borussia Dortmund', budget: 376.35, icon: 'dortmund.gif' },
+  { team: 'Bayer 04 Leverkusen', budget: 273.95, icon: 'leverkusen.gif' },
+  { team: 'FC Schalke 04', budget: 216.63, icon: 'schalke.gif' },
+  { team: 'Borussia Mönchengladbach', budget: 163.55, icon: 'gladbach.gif' },
+  { team: 'VfL Wolfsburg', budget: 154.00, icon: 'wolfsburg.gif' },
+  { team: 'RasenBallsport Leipzig', budget: 123.93, icon: 'leipzig.gif' },
+  { team: 'TSG 1899 Hoffenheim', budget: 101.63, icon: 'hoffenheim.gif' },
+  { team: '1.FC Köln', budget: 99.30, icon: 'koeln.gif' },
+  { team: 'Hertha BSC', budget: 86.30, icon: 'hertha.gif' },
+  { team: '1.FSV Mainz 05', budget: 79.73, icon: 'mainz.gif' },
+  { team: 'Hamburger SV', budget: 75.75, icon: 'hamburg.gif' },
+  { team: 'SV Werder Bremen', budget: 69.80, icon: 'bremen.gif' },
+  { team: 'Eintracht Frankfurt', budget: 68.55, icon: 'frankfurt.gif' },
+  { team: 'FC Augsburg', budget: 62.73, icon: 'augsburg.gif' },
+  { team: 'SC Freiburg', budget: 58.68, icon: 'freiburg.gif' },
+  { team: 'FC Ingolstadt 04', budget: 34.55, icon: 'ingolstadt.gif' },
+  { team: 'SV Darmstadt 98', budget: 21.50, icon: 'darmstadt.gif' },
+]
+
+const tables = [
+  { rank: 1, team: 'Bayern', matches: 32, wins: 23, losses: 7, draws: 2, goals: 80, received: 17, diff: 63, points: 76, budget: 566.15, icon: 'bayern.gif' },
+  { rank: 2, team: 'Leipzig', matches: 32, wins: 20, losses: 6, draws: 6, goals: 60, received: 32, diff: 28, points: 66, budget: 123.93, icon: 'leipzig.gif' },
+  { rank: 3, team: 'Dortmund', matches: 32, wins: 17, losses: 9, draws: 6, goals: 67, received: 36, diff: 31, points: 60, budget: 376.35, icon: 'dortmund.gif' },
+  { rank: 4, team: 'Hoffenheim', matches: 32, wins: 15, losses: 13, draws: 4, goals: 59, received: 34, diff: 25, points: 58, budget: 101.63, icon: 'hoffenheim.gif' },
+  { rank: 5, team: 'Freiburg', matches: 32, wins: 14, losses: 5, draws: 13, goals: 40, received: 55, diff: -15, points: 47, budget: 58.68, icon: 'freiburg.gif' },
+  { rank: 6, team: 'Hertha BSC', matches: 32, wins: 14, losses: 4, draws: 14, goals: 39, received: 41, diff: -2, points: 46, budget: 86.30, icon: 'hertha.gif' },
+  { rank: 7, team: 'FC Köln', matches: 32, wins: 11, losses: 12, draws: 9, goals: 47, received: 40, diff: 7, points: 45, budget: 99.30, icon: 'koeln.gif' },
+  { rank: 8, team: 'Bremen', matches: 32, wins: 13, losses: 6, draws: 13, goals: 55, received: 55, diff: 0, points: 45, budget: 69.80, icon: 'bremen.gif' },
+  { rank: 9, team: 'Gladbach', matches: 32, wins: 12, losses: 7, draws: 13, goals: 42, received: 46, diff: -4, points: 43, budget: 163.55, icon: 'gladbach.gif' },
+  { rank: 10, team: 'Schalke', matches: 32, wins: 11, losses: 8, draws: 13, goals: 43, received: 38, diff: 5, points: 41, budget: 216.63, icon: 'schalke.gif' },
+  { rank: 11, team: 'Frankfurt', matches: 32, wins: 11, losses: 8, draws: 13, goals: 32, received: 37, diff: -5, points: 41, budget: 68.55, icon: 'frankfurt.gif' },
+  { rank: 12, team: 'Leverkusen', matches: 32, wins: 10, losses: 7, draws: 15, goals: 45, received: 51, diff: -6, points: 37, budget: 273.95, icon: 'leverkusen.gif' },
+  { rank: 13, team: 'Augsburg', matches: 32, wins: 9, losses: 9, draws: 14, goals: 34, received: 50, diff: -16, points: 36, budget: 62.73, icon: 'augsburg.gif' },
+  { rank: 14, team: 'Wolfsburg', matches: 32, wins: 10, losses: 6, draws: 16, goals: 32, received: 49, diff: -17, points: 36, budget: 154.00, icon: 'wolfsburg.gif' },
+  { rank: 15, team: 'Mainz', matches: 32, wins: 9, losses: 7, draws: 16, goals: 40, received: 51, diff: -11, points: 34, budget: 79.73, icon: 'mainz.gif' },
+  { rank: 16, team: 'Hamburg', matches: 32, wins: 9, losses: 7, draws: 16, goals: 30, received: 59, diff: -29, points: 34, budget: 75.75, icon: 'hamburg.gif' },
+  { rank: 17, team: 'Ingolstadt', matches: 32, wins: 8, losses: 6, draws: 18, goals: 34, received: 55, diff: -21, points: 30, budget: 34.55, icon: 'ingolstadt.gif' },
+  { rank: 18, team: 'Darmstadt', matches: 32, wins: 7, losses: 3, draws: 22, goals: 26, received: 59, diff: -33, points: 24, budget: 21.50, icon: 'darmstadt.gif' },
+]
+
