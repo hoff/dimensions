@@ -87,13 +87,7 @@ export class MIDIService {
    * @param velocityDecimal the velocity between 0 and 1
    */
   soundNote(channel: number, key: number, velocityDecimal) {
-    console.log(MIDI)
-    let no = MIDI.noteOn
-    console.log('no?', no)
-    if (!MIDI.noteOn) {
-      console.warn('somehow, the MIDI instance (global thing, does not have note on, it is', MIDI)
-      return
-    }
+   
     MIDI.noteOn(0, key, velocityDecimal * 127, 0)
   }
 
@@ -108,6 +102,10 @@ export class MIDIService {
   }
 
   parsedMidi
+
+  bindInput(inputElement, callback) {
+    MIDIParser.addListener( inputElement , callback)
+  }
 
   constructor(
   ) {
@@ -222,6 +220,8 @@ export class MIDIService {
 
   streamMessage = (message) => {
 
+    // console.log(message.data)
+
     const [action, key, value] = message.data
 
     // console.log('MIDI service received action, key, value: ', message.data)
@@ -250,6 +250,16 @@ export class MIDIService {
           key: key,
           keyName: 'C1', // todo
           velocity: value / 127,
+        }
+        break
+
+      case 224:
+        msg = {
+          control: 'keyboard',
+          name: 'modulation',
+          key: 'modulation',
+          keyName: 'modulation',
+          decimal: (value - 64) / 64
         }
         break
 

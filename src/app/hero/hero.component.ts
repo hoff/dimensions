@@ -10,6 +10,12 @@ import OrbitControls from 'orbit-controls-es6'
 // Services
 import { MIDIService } from '../midi.service'
 
+// hero classes
+import { Hero } from '../hero'
+import { Piano, PianoKey } from '../piano'
+import { Song } from '../song'
+
+
 // Light interfaces
 interface Light {
   name: string,
@@ -29,8 +35,12 @@ interface Spot {
 
 /**
  * parameters used for creating a box
+ * 
+ * when a scene is provided, it is automatically added
  */
-interface BoxParams {
+export interface BoxParams {
+  opacity?: number,
+  shape?: string, // ball or box
   width?: number,
   height?: number,
   depth?: number,
@@ -38,8 +48,25 @@ interface BoxParams {
   y?: number,
   z?: number,
   visible?: boolean,
-  colorHSL?: {h: number, s: number, l: number},
-  add?: boolean,
+  colorHSL?: { h: number, s: number, l: number },
+  scene?: THREE.Scene,
+}
+
+
+export const COLORS = {
+  'A': {h: 56 / 360, s: 1.0, l: .60}, // yellow
+  'Bb': {h: (56 +  323) / 2, s: .99, l: .63}, // 'brown',
+  'B': {h: 323 / 350, s: .96, l: .67}, // 'pink',
+  'C': {h: .44, s: .96, l: 1}, // 'white',
+  'C#': {h: .44, s: .96, l: .1}, // 'dunno',
+  'D': {h: 39 / 360, s: 1, l: .50}, // 'orange',
+  'D#': {h: .24, s: .50, l: .2}, // 'dunno',
+  'E': {h: 112 / 360, s: .65, l: .55}, // 'green',
+  'F': {h: 226 / 360, s: .65, l: .55}, // 'blue',
+  'F#':  {h: 266 / 360, s: .65, l: .46}, // 'violet',
+  'G': {h: 350 / 360, s: 1, l: .50}, // 'red',
+  'G#': {h: 0, s: .36, l: .31}, // brown,
+
 }
 
 @Component({
@@ -51,17 +78,24 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
 
   @ViewChild('sceneContainer') sceneContainer: ElementRef
   @ViewChild('sidebar') sidebar: ElementRef
+  @ViewChild('midiFile') midiFile: ElementRef
 
   scene: THREE.Scene
   camera: THREE.PerspectiveCamera
   renderer: THREE.WebGLRenderer
   controls: OrbitControls
 
-  subject: Subject<any>
+  animationStream: Subject<any>
 
   window = window
   sidebarWidth = 300
   sidebarVisible = true
+
+  piano: Piano
+  heros: Hero[] = []
+  heroSpeed = 0.1
+  heroRunning = false
+  song: Song
 
   // LIGHT DIMENSIONS
   lights: {
@@ -100,12 +134,16 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
   }
 
   dimensions = {
+    gravity: 0.01,
     running: true,
     time: 10000,
     lights: this.lights,
-    zTest: 3,
+    heroSpeed: 0.1,
     renderer: {
       opacity: 1
+    },
+    song: {
+      playing: false
     }
   }
 
@@ -113,7 +151,7 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
 
     public midi: MIDIService,
 
-  ) { 
+  ) {
     /**
      * Subscribe to keyboard events
      */
@@ -133,7 +171,7 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
     /**
      * create observable dimensions subject
      */
-    this.subject = new Subject()
+    this.animationStream = new Subject()
 
   }
 
@@ -142,8 +180,9 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
 
   ngAfterViewInit() {
     this.sceneSetup(this.dimensions)
-    window.addEventListener('resize', this.onWindowResize, false);
+    window.addEventListener('resize', this.onWindowResize, false)
   }
+  
 
   ngAfterViewChecked() {
     // console.log('view checked')
@@ -223,77 +262,56 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
     /**
      * Subscribe to midi events (test)
      */
-    this.midi.stream.subscribe(msg => {
-      let boxParams: BoxParams = {
-        width: 2,
-        x: msg.key - 70,
-      }
-      this.makeBox(boxParams)
+    this.midi.stream.filter(msg => msg.keyName === 'modulation').subscribe(msg => {
+
+        // nothing here
+
     })
 
     /** kick off animation loop */
     this.animate()
 
-    /** test box */
-    this.makeBox({})
-    
+
+    /** create piano! */
+    this.makePiano()
+
+    /** hero setup via song */
+    // this.makeSong()
+    let hsl = {h: 1, s: 0.5, l: 0.5}
+    let testBox: BoxParams = {y: 10, scene: this.scene, colorHSL: hsl}
+    let testMesh = makeBox(testBox)
+
   }
+
+  /** creates a piano and add it to scene */
+  makePiano() {
+    this.piano = new Piano(this.midi, this.scene, this.animationStream)
+    this.scene.add(this.piano.keyboard3D)
+  }
+
+  /** 
+   * create a song for testing
+   */
+   makeSong() {
+     this.song = new Song(this.midi, this.scene, this.animationStream, this.piano, this.dimensions)
+   }
+
+
 
   /**
-   * Creates a box for, the way you like it...
-   * and adds it to the scene by default :)
+   * THE ANIMATION LOOP
+   * 
+   * - publishes time updated dimensions
+   * - renders the scene
    */
-  makeBox(params: BoxParams) {
-
-    /** Read Params */
-
-    // size
-    const width  = params.width  || 1
-    const height = params.height || 1
-    const depth  = params.depth  || 1
-
-    // position
-    const x = params.x || 0
-    const y = params.y || 0
-    const z = params.z || 0
-
-    // color {hsl}
-    const hsl = params.colorHSL || {h: 0, s: 0, l: 1}
-
-    // add
-    const add = params.add || true
-
-    /** Create Box */
-
-    // material
-    const boxMaterial = new THREE.MeshPhongMaterial()
-    boxMaterial.color.setHSL(hsl.h, hsl.s, hsl.l)
-
-    // geometry
-    const boxGeometry = new THREE.BoxGeometry(width, width, width)
-
-    // mesh
-    const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial)
-    boxMesh.position.set(x, y, z)
-
-    // add 
-    if (add) {
-      this.scene.add(boxMesh)
-    }
-
-    return boxMesh
-  }
 
   animate = () => {
 
-    // run hero test
-    // this.runHero()
-
-    // forward time if running
-    this.dimensions.time += this.dimensions.running ? 15 : 0
+    // forward time
+    this.dimensions.time += 15
 
     // publish dimensions
-    this.subject.next(this.dimensions)
+    this.animationStream.next(this.dimensions)
 
     // render
     this.renderer.render(this.scene, this.camera)
@@ -302,4 +320,83 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
     requestAnimationFrame(this.animate)
   }
 
+}
+
+
+
+
+/**
+ * UTLILS
+ */
+
+/**
+ * Creates a box for, the way you like it...
+ */
+export const makeBox = (params: BoxParams) => {
+
+  console.log('make box with', params)
+
+  /** Read Params */
+
+  const shape = params.shape || 'box'
+
+  // size
+  const width = params.width || 1
+  const height = params.height || 1
+  const depth = params.depth || 1
+
+  // position
+  const x = params.x || 0
+  const y = params.y || 0
+  const z = params.z || 0
+
+  // color {hsl} | default WHITE
+  const hsl = params.colorHSL || { h: 0, s: 0, l: 1 }
+
+  // opacity
+  const opacity = params.opacity || 1
+
+  // scene means adding to it
+  const scene = params.scene
+
+
+  /** Create Box */
+
+  // material
+  const boxMaterial = new THREE.MeshPhongMaterial({ transparent: true })
+  boxMaterial.opacity = opacity
+
+  boxMaterial.color.setHSL(hsl.h, hsl.s, hsl.l)
+
+  // geometry
+  let geometry
+  if (shape === 'box') {
+    geometry = new THREE.BoxGeometry(width, height, depth)
+  } else if (shape === 'ball') {
+    geometry = new THREE.Sphere()
+  }
+
+  // create mesh
+  const boxMesh = new THREE.Mesh(geometry, boxMaterial)
+  boxMesh.position.set(x, y, z)
+
+  // add to scene
+  if (scene) { scene.add(boxMesh) }
+
+  return boxMesh
+}
+
+
+/**
+ * degrees -> radians
+ */
+export function toRadians(degrees: number) {
+  return degrees * Math.PI / 180
+}
+
+/**
+ * radians -> degrees
+ */
+export function toDegrees(radians: number) {
+  return 180 * radians / Math.PI
 }
