@@ -103,9 +103,7 @@ export class MIDIService {
 
   parsedMidi
 
-  bindInput(inputElement, callback) {
-    MIDIParser.addListener( inputElement , callback)
-  }
+  
 
   constructor(
   ) {

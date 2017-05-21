@@ -22,6 +22,9 @@ export class Hero {
     hueDecimal: number
     mesh: THREE.Mesh
     played = false
+    pending = false
+
+    colorHSL
 
     downVelocity = 0
     hit = false
@@ -33,7 +36,8 @@ export class Hero {
         private animationStream: Subject<any>,
         private piano: Piano,
         private scene: THREE.Scene,
-        private delta: number,
+        public trackDelta: number,
+        public eigenDelta: number,
         private midiKey: number,
         private velocity: number,
         private type: string,
@@ -44,6 +48,8 @@ export class Hero {
         this.partnerKey = this.piano.keys.find(key => {
             return key.midiKey === this.midiKey
         })
+
+        this.colorHSL = this.partnerKey.noteHSL
 
         let keyPosition = this.partnerKey.reportPosition()
         let x = keyPosition.x
@@ -56,8 +62,8 @@ export class Hero {
             height: 1,
             depth: 3,
             x: x,           // as partner
-            z: delta * -1,  // depth is time delta
-            y: y + 5,       // as partner
+            z: trackDelta * -1,  // depth is time delta
+            y: y + 1,       // one above
             colorHSL: this.partnerKey.noteHSL,
         }
 
@@ -67,9 +73,11 @@ export class Hero {
         this.midi.stream.filter(msg => (msg.key === this.midiKey && msg.name === 'keydown')).subscribe(msg => {
 
             // get hit if you are in range!
-            if (this.mesh.position.z > -2) {
-                this.downVelocity = 3
+            if (this.mesh.position.z > -2 && !this.hit) {
+                this.downVelocity = 0.1
                 this.hit = true
+                let mat: any = this.mesh.material
+                mat.color.setHSL
             }
         })
 
@@ -77,6 +85,16 @@ export class Hero {
         this.animationStream.subscribe(dimensions => {
             if (dimensions.song.playing) {
                 this.tick(dimensions)
+            }
+            // if hit, fade out!
+            if (this.hit) {
+                this.mesh.material.opacity -= 0.05
+                if (this.pending) {
+                    console.log('hero removes herself from pending')
+                    this.pending = false
+                    this.song.removeFromPendingHeros(this)
+                }
+
             }
         })
     }
@@ -102,8 +120,11 @@ export class Hero {
             this.played = true
         }
         // if you have not been hit but are at zero: make the song wait!
-        if (this.mesh.position.z > 0 && !this.hit) {
-            // this.dimensions.song.playing = false
+        // why does this keep happening?
+        if (this.mesh.position.z > 0 && !this.hit && !this.pending) {
+            console.log('hero add herself to pending')
+            this.pending = true
+            this.song.addToPendingHeros(this)
         }
     }
 }

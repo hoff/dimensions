@@ -129,7 +129,7 @@ export class PianoKey {
             this.keyMesh.position.y = this.keyMesh.position.y - 0.4
 
             // keydown: fire vessel
-            let vessel = new Vessel(this, this.scene, this.animationStream, msg.velocity)
+            // let vessel = new Vessel(this, this.scene, this.animationStream, msg.velocity)
 
             // test: hightern launchpad!
             this.launchpadMesh.scale.setY(10)
@@ -188,7 +188,7 @@ export class PianoKey {
             
             // and rails
             let railsParams = {
-                opacity: 0.1,
+                // opacity: 0.5,
                 width: this.whiteWidth,
                 height: this.whiteHeight,
                 depth: 100,
@@ -219,12 +219,13 @@ export class PianoKey {
 
             // and balck rails
             let railsParams: BoxParams = {
-                opacity: 0.1,
+                opacity: 0.0,
                 width: this.blackWidth,
                 height: this.blackHeight,
                 depth: 100,
-                y: 1,
+                y: -0.3,
                 z: -55,
+                colorHSL: {h: 0, s: 0, l: 0.5}
             }
             this.railsMesh = makeBox(railsParams)
         }

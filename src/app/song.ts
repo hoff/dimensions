@@ -31,16 +31,35 @@ const songs = {
  */
 
 export class Song {
-    
+
     songMidi
     heros: Hero[] = []
 
-    constructor(private midi: MIDIService, private scene: THREE.Scene, private animationStream: Subject<any>, private piano: Piano, private dimensions: any ) {
-        
-        // this.loadBase64('elise')
+    pendingHeros: Hero[] = []
+    lastHeroSpeed: number
+
+    constructor(private midi: MIDIService, private scene: THREE.Scene, private animationStream: Subject<any>, private piano: Piano, private dimensions: any) {
+
+        this.loadBase64('elise')
         this.loadBase64('Love and Marriage')
         this.heroSetup(this.songMidi)
         console.log('song midi', this.songMidi)
+
+        // record last speed
+        this.lastHeroSpeed = dimensions.heroSpeed
+
+        // subscribe to dimensions
+        this.animationStream.subscribe(dimensions => {
+            this.lastHeroSpeed = dimensions.heroSpeed
+        })
+
+
+    }
+
+    bindInput(inputElement, callback) {
+        MIDIParser.addListener(inputElement, (midiData) => {
+            console.log('file parsed', midiData)
+        })
     }
 
 
@@ -68,7 +87,8 @@ export class Song {
             let trackEvents = track.event
             for (let event of trackEvents) {
                 trackDelta += event.deltaTime
-                
+                let eigenDelta = event.deltaTime
+
                 // TODO: understand midi event types better
                 if (event.type === 9) {
 
@@ -76,7 +96,7 @@ export class Song {
                     let velocity = event.data[1]
 
                     // Create Keydown Hero
-                    let hero = new Hero(this, trackNumber, this.midi, this.animationStream, this.piano, this.scene, trackDelta, midiKey, velocity, 'keydown', this.dimensions)
+                    let hero = new Hero(this, trackNumber, this.midi, this.animationStream, this.piano, this.scene, trackDelta, eigenDelta, midiKey, velocity, 'keydown', this.dimensions)
 
                     this.heros.push(hero)
                 }
@@ -84,4 +104,32 @@ export class Song {
             trackNumber += 1
         }
     }
+
+    addToPendingHeros(hero: Hero) {
+        this.pendingHeros.push(hero)
+        this.checkPendingHeros()
+    }
+    removeFromPendingHeros(hero: Hero) {
+        let index = this.pendingHeros.indexOf(hero)
+        this.pendingHeros.splice(index, 1)
+        this.checkPendingHeros()
+    }
+
+    checkPendingHeros() {
+        let delta = 0
+        for (let hero of this.pendingHeros) {
+            delta += hero.eigenDelta
+        }
+        if (this.pendingHeros.length > 0) {
+            this.dimensions.heroSpeed = 0
+            console.log('got Heros!: setting speed to zero, should be paused')
+        } else {
+            console.log('no pending heros, continue playing')
+            this.dimensions.heroSpeed = 2
+        }
+        console.log(this.pendingHeros)
+        return delta
+    }
+
+
 }

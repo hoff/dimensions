@@ -232,7 +232,7 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
     // camera
     this.camera = new THREE.PerspectiveCamera(40, this.sceneContainer.nativeElement.scrollWidth / this.sceneContainer.nativeElement.scrollHeight, 1, 10000)
     this.camera.position.z = 5
-    this.camera.fov = 10
+    this.camera.fov = 5
     this.camera.position.set(0, 17, 26)
 
     // controls
@@ -334,8 +334,6 @@ export class HeroComponent implements OnInit, AfterViewChecked, AfterViewInit {
  */
 export const makeBox = (params: BoxParams) => {
 
-  console.log('make box with', params)
-
   /** Read Params */
 
   const shape = params.shape || 'box'
@@ -358,7 +356,6 @@ export const makeBox = (params: BoxParams) => {
 
   // scene means adding to it
   const scene = params.scene
-
 
   /** Create Box */
 
