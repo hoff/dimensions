@@ -40,6 +40,7 @@ export class Song {
 
     constructor(private midi: MIDIService, private scene: THREE.Scene, private animationStream: Subject<any>, private piano: Piano, private dimensions: any) {
 
+        // instead, receive midi!
         this.loadBase64('elise')
         this.loadBase64('Love and Marriage')
         this.heroSetup(this.songMidi)
@@ -60,6 +61,10 @@ export class Song {
         MIDIParser.addListener(inputElement, (midiData) => {
             console.log('file parsed', midiData)
         })
+    }
+
+    setupSong(midiObject) {
+        //this.heroSetup()
     }
 
 
