@@ -143,7 +143,8 @@ class Ship {
       /* give thrust according to knob */
       if (msg.keyName === 'R1') {
         this.thrust = msg.decimal * 3
-        this.thruster.material.opacity = msg.decimal
+        let anymat: any = this.thruster.material
+        anymat = msg.decimal
       } if (msg.keyName === 'R2') {
         // this.pushBackFactor = msg.decimal * 3
         // this.gFactor = msg.decimal * 10

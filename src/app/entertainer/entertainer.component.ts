@@ -326,7 +326,8 @@ class Vessle {
      */
     this.midi.stream.filter(msg => msg.key === this.key && msg.name === 'keyup').take(1).subscribe(msg => {
 
-      this.mesh.material.opacity = 0.1
+      let anyMat: any = this.mesh.material
+      anyMat.opacity = 0.1
     })
 
     /**
@@ -348,7 +349,8 @@ class Vessle {
       let decimal = progress / range
       // console.log(decimal)
 
-      this.mesh.material.opacity = decimal + 0.5
+      let anyMat: any = this.mesh.material
+      anyMat.opacity = decimal + 0.5
 
       // re-position yourself
       this.mesh.position.add(this.velocity)

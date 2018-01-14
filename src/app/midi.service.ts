@@ -116,7 +116,7 @@ export class MIDIService {
     /**
      * create MIDI Stream
      */
-    this.stream = new Observable(source => {
+    this.stream = new Observable<any>(source => {
       this.source = source
     }).share()
     this.stream.subscribe()

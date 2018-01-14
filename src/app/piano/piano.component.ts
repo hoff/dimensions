@@ -1024,7 +1024,8 @@ class Vessel {
 
 
       // fade
-      this.vesselMesh.material.opacity -= this.dimensions.box.fadeSpeed / 30
+      let anymat: any = this.vesselMesh.material
+      anymat.opacity -= this.dimensions.box.fadeSpeed / 30
 
       let myMesh = this.vesselMesh
       let myMaterial: any = myMesh.material
@@ -1042,8 +1043,9 @@ class Vessel {
       this.vesselMesh.position.add(this.velocity)
 
 
+      let anyMat: any = this.vesselMesh.material
 
-      if (this.vesselMesh.position.y < 0 || this.vesselMesh.material.opacity < 0) {
+      if (this.vesselMesh.position.y < 0 || anyMat.opacity < 0) {
         // this.vesselMesh.visible = false
         this.scene.remove(this.vesselMesh)
 

@@ -88,7 +88,8 @@ export class Hero {
             }
             // if hit, fade out!
             if (this.hit) {
-                this.mesh.material.opacity -= 0.05
+                let anyMat: any = this.mesh.material
+                anyMat.opacity -= 0.05
                 if (this.pending) {
                     console.log('hero removes herself from pending')
                     this.pending = false

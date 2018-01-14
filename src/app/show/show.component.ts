@@ -68,8 +68,6 @@ export class ShowComponent extends Show implements OnInit {
   notes = []
 
   matterEngine: any
-  engine: Engine
-  matterRender: Render
 
   knobMapping = [
     {
@@ -158,7 +156,7 @@ export class ShowComponent extends Show implements OnInit {
       light = i / 100
 
       mat.color.setHSL(hue, sat, light)
-      const mymesh = new Mesh(geo, mat)
+      const mymesh: any = new Mesh(geo, mat)
       mymesh.castShadow = true
       mymesh.position.z = 0
       mymesh.visible = true

@@ -34,6 +34,7 @@ import {
   Vector3,
 
   PCFSoftShadowMap,
+  AxisHelper,
 
 } from 'three'
 import OrbitControls from 'orbit-controls-es6'
@@ -47,7 +48,6 @@ import OrbitControls from 'orbit-controls-es6'
 export class Show {
 
   controls: any
-  jo: any
 
   el: any
   public midi: MIDIService
@@ -82,24 +82,23 @@ export class Show {
     element.appendChild(this.renderer.domElement)
 
     this.camera = new PerspectiveCamera(75, this.el.scrollWidth / this.el.scrollHeight, 1, 10000)
-    //this.camera = new OrthographicCamera(100, 100, 100, 100)
+    // this.camera = new OrthographicCamera(100, 100, 100, 100)
     this.camera.position.z = 5
     
 
     // controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enabled = true;
-    this.controls.autoRotate = true
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
     this.controls.autoRotate = false
     this.controls.noZoom = false
     
-
     // lights
     this.ambient = new AmbientLight(0xffab12)
     this.scene.add(this.ambient)
 
+    // directional
     this.directional = new DirectionalLight(0xFFFFFF, 0.5)
     this.directional.position.set(2, 2, 7);
     this.directional.target.position.set(0, 0, 0);
@@ -125,20 +124,24 @@ export class Show {
     const shadow = this.spot.shadow
 
     this.lights.spot = this.spot
-    //this.scene.add(this.spot)
+    this.scene.add(this.spot)
 
     const spotLightHelper = new SpotLightHelper( this.spot );
-    //this.scene.add( spotLightHelper )
+    // this.scene.add( spotLightHelper )
 
     // ambient
     this.ambient = new AmbientLight(0xffffff)
     this.ambient.intensity = 0.2
     this.scene.add(this.ambient)
 
-    const helper = new DirectionalLightHelper(this.directional);
+    const dirLightHelper = new DirectionalLightHelper(this.directional);
     const camHelper = new CameraHelper(this.directional.shadow.camera);
 
-    // this.scene.add(helper)
-    //this.scene.add(camHelper)
+    // this.scene.add(dirLightHelper)
+    // this.scene.add(camHelper)
+
+    var axesHelper = new AxisHelper( 5 );
+    this.scene.add( axesHelper );
+
   }
 }

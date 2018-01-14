@@ -5,7 +5,6 @@ import { HttpModule } from '@angular/http';
 import { RouterModule, Routes } from '@angular/router'
 import 'hammerjs'
 import { NoopAnimationsModule, BrowserAnimationsModule } from '@angular/platform-browser/animations'
-import { MdButtonModule, MdCheckboxModule, MdSliderModule } from '@angular/material'
 
 import { AppComponent } from './app.component'
 import { MIDIService } from './midi.service';
@@ -25,10 +24,11 @@ import { PianoComponent } from './piano/piano.component';
 import { ControlPanelComponent } from './control-panel/control-panel.component';
 import { CemetaryComponent } from './cemetary/cemetary.component';
 import { SpiralComponent } from './spiral/spiral.component';
-import { HeroComponent } from './hero/hero.component'
+import { HeroComponent } from './hero/hero.component';
+import { WalkthroughComponent } from './walkthrough/walkthrough.component'
 
 const appRoutes: Routes = [
-  { path: '', component: PianoComponent },
+  { path: '', component: WalkthroughComponent },
   { path: 'hero', component: HeroComponent },
   { path: 'spiral', component: SpiralComponent },  
   { path: 'cemetary', component: CemetaryComponent },
@@ -59,6 +59,7 @@ const appRoutes: Routes = [
     CemetaryComponent,
     SpiralComponent,
     HeroComponent,
+    WalkthroughComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
@@ -68,7 +69,6 @@ const appRoutes: Routes = [
     // material: https://material.angular.io/guide/getting-started
     // BrowserAnimationsModule,
     NoopAnimationsModule,
-    MdButtonModule, MdCheckboxModule, MdSliderModule
   ],
   providers: [
      MIDIService,
