@@ -3,11 +3,15 @@ import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs/Observable'
 import { Subscriber } from 'rxjs/Subscriber'
 
+import { Subject } from 'rxjs/Subject'
+
 @Injectable()
 export class AnimationService {
 
   beforeRenderSource: Subscriber<any>
   beforeRenderStream: Observable<any>
+
+  measureSubject = new Subject<string>()
 
 
   EasingFunctions = {

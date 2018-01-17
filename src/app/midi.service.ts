@@ -221,6 +221,7 @@ export class MIDIService {
     // console.log(message.data)
 
     const [action, key, value] = message.data
+    
 
     // console.log('MIDI service received action, key, value: ', message.data)
 

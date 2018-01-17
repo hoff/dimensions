@@ -96,10 +96,10 @@ export class Show {
     
     // lights
     this.ambient = new AmbientLight(0xffab12)
-    this.scene.add(this.ambient)
+    // this.scene.add(this.ambient)
 
     // directional
-    this.directional = new DirectionalLight(0xFFFFFF, 0.5)
+    this.directional = new DirectionalLight(0xFFFFFF, 0.8)
     this.directional.position.set(2, 2, 7);
     this.directional.target.position.set(0, 0, 0);
     this.directional.castShadow = true;
@@ -124,7 +124,7 @@ export class Show {
     const shadow = this.spot.shadow
 
     this.lights.spot = this.spot
-    this.scene.add(this.spot)
+    // this.scene.add(this.spot)
 
     const spotLightHelper = new SpotLightHelper( this.spot );
     // this.scene.add( spotLightHelper )
@@ -141,7 +141,7 @@ export class Show {
     // this.scene.add(camHelper)
 
     var axesHelper = new AxisHelper( 5 );
-    this.scene.add( axesHelper );
+    // this.scene.add( axesHelper );
 
   }
 }
