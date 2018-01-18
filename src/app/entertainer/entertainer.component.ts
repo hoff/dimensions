@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef, AfterViewInit } from '@angular/core'
+import { Component, OnInit, Input, ViewChild, ElementRef, AfterViewInit, NgZone } from '@angular/core'
 
 import { Show } from '../show'
 import { MIDIService, MIDIMessage } from '../midi.service'

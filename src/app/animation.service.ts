@@ -11,7 +11,7 @@ export class AnimationService {
   beforeRenderSource: Subscriber<any>
   beforeRenderStream: Observable<any>
 
-  measureSubject = new Subject<string>()
+  measureSubject = new Subject<{name: string, fromF0: number}>()
 
 
   EasingFunctions = {

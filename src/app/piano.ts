@@ -22,7 +22,7 @@ export class Piano {
     constructor(
         public midi: MIDIService,
         public scene: THREE.Scene,
-        public animationStream: Subject<any>,
+        public animationStream?: Subject<any>,
     ) {
         // make keys
         for (let i = 0; i < 88; i++) {
@@ -232,8 +232,8 @@ export class PianoKey {
 
         // add objects to group
         this.group3D.add(this.keyMesh)
-        this.group3D.add(this.launchpadMesh)
-        this.group3D.add(this.railsMesh)
+        // this.group3D.add(this.launchpadMesh)
+        // this.group3D.add(this.railsMesh)
     }
 
     /**

@@ -3,11 +3,15 @@ import {
   OnInit,
   ViewChild,
   ElementRef,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  NgZone,
 } from "@angular/core";
 import { Show } from "../show";
 import { MIDIService } from "../midi.service";
 import { AnimationService } from "../animation.service";
+
+import { Piano } from '../piano'
 
 import * as THREE from "three";
 
@@ -76,10 +80,17 @@ const NOTES = [
 })
 export class WalkthroughComponent implements OnInit {
   frame = 0;
+  piano: Piano
   show: Show;
   @ViewChild("container") container: ElementRef;
 
-  constructor(public midi: MIDIService, public animation: AnimationService) {
+  constructor(
+    public changeDetecor: ChangeDetectorRef,
+    public zone: NgZone,
+    public midi: MIDIService, public animation: AnimationService) {
+
+      this.changeDetecor.detach()
+
     this.show = new Show();
 
     let map = {
@@ -91,6 +102,10 @@ export class WalkthroughComponent implements OnInit {
       Digit6: "B6"
     };
     let jo = Observable.fromEvent(window, "keydown").subscribe((event: any) => {
+      if (event.code === 'KeyP') {
+        this.togglePiano()
+      }
+
       let outKey = map[event.code];
       if (!outKey) {
         return;
@@ -104,15 +119,24 @@ export class WalkthroughComponent implements OnInit {
     });
   }
 
+  togglePiano() {
+    this.piano.keyboard3D.visible = !this.piano.keyboard3D.visible
+  }
+
   ngOnInit() {
     this.show.setupShow(this.midi, this.container.nativeElement);
+
+    // create a piano
+    this.piano = new Piano(this.midi, this.show.scene)
+    this.togglePiano()
+    // this.piano.keyboard3D.scale.set(0.2, 0.2, 0.2)
 
     // create a box for each midi key!
     for (let i = 22; i < 77; i++) {
       // let box = new Box(this.animation, this.show.scene, i)
     }
     // kick off rendering
-    this.animate();
+    this.zone.runOutsideAngular(() => this.animate())
 
     this.animation.beforeRenderStream.subscribe(() => {});
 
@@ -153,42 +177,6 @@ export class WalkthroughComponent implements OnInit {
   };
 }
 
-class Box {
-  herz = 1; // one cycle per second
-  mesh: THREE.Mesh;
-
-  xPosition: number;
-  frequency: number;
-
-  constructor(
-    public animation: AnimationService,
-    public scene: THREE.Scene,
-    public midiNumber: number
-  ) {
-    let mat = new THREE.MeshPhongMaterial();
-    let geo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-    this.mesh = new THREE.Mesh(geo, mat);
-
-    let exponent = (this.midiNumber - 21) / 12;
-    this.frequency = 27.5 * Math.pow(2, exponent);
-
-    this.xPosition = Math.log2(this.frequency);
-
-    this.scene.add(this.mesh);
-    this.animation.beforeRenderStream.subscribe(frame => {
-      this.updatePosition(frame);
-    });
-  }
-
-  updatePosition(frame: number) {
-    // move 1 / 60th of the say, sine style.
-    this.mesh.position.set(
-      this.xPosition,
-      0.01 * Math.sin(frame * (this.frequency * 0.001)),
-      0
-    );
-  }
-}
 
 function toRadians(angle) {
   return angle * (Math.PI / 180);
@@ -226,8 +214,9 @@ class Wave {
       // this.growShrink()
     }
     // subscibe to 'same note measuring'
-    this.animation.measureSubject.subscribe(noteName => {
-      if (this.name === noteName) {
+    this.animation.measureSubject.subscribe(info => {
+      // only if from f0 is lower!
+      if (this.name === info.name && this.fromF0 <= info.fromF0) {
         this.measure()
       }
     }) 
@@ -388,7 +377,7 @@ class Wave {
       if (this.down) {
         this.measure();
         // broadcast to others of the same key!
-        // this.animation.measureSubject.next(this.name)
+        this.animation.measureSubject.next({name: this.name, fromF0: this.fromF0})
       }
     });
     this.midi.stream.filter(msg => msg.keyName === "B2").subscribe(msg => {
@@ -415,6 +404,7 @@ class Wave {
   
 
   log() {
+    
     console.log(
       "wave here",
       this.name,
@@ -426,7 +416,7 @@ class Wave {
   }
 
   showParticles() {
-    this.log();
+    // this.log();
     this.particleGroup.visible = true;
   }
   hideParticle() {
@@ -550,7 +540,7 @@ class Particle {
       this.particle.position.x = newX;
 
       let backX = this.minDisplacement * Math.sin(frame / 10); // improve frame
-      backX = this.maxDisplacement
+      backX = this.minDisplacement
 
 
       this.backParticle.position.x = backX;

@@ -25,10 +25,12 @@ import { ControlPanelComponent } from './control-panel/control-panel.component';
 import { CemetaryComponent } from './cemetary/cemetary.component';
 import { SpiralComponent } from './spiral/spiral.component';
 import { HeroComponent } from './hero/hero.component';
-import { WalkthroughComponent } from './walkthrough/walkthrough.component'
+import { WalkthroughComponent } from './walkthrough/walkthrough.component';
+import { WaveComponent } from './wave/wave.component'
 
 const appRoutes: Routes = [
   { path: '', component: WalkthroughComponent },
+  { path: 'wave', component: WaveComponent },
   { path: 'hero', component: HeroComponent },
   { path: 'spiral', component: SpiralComponent },  
   { path: 'cemetary', component: CemetaryComponent },
@@ -60,6 +62,7 @@ const appRoutes: Routes = [
     SpiralComponent,
     HeroComponent,
     WalkthroughComponent,
+    WaveComponent,
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
